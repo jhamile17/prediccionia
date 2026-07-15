@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Dashboard
+{% endblock %}
+
+{% block content %}
+
+<div class="card">
+
+    <h2>Sistema de Predicción de Demanda</h2>
+
+    <div class="cards">
+
+        <div class="mini-card">
+
+            <h3>Productos</h3>
+
+            <h1>{{ resumen.productos }}</h1>
+
+        </div>
+
+        <div class="mini-card">
+
+            <h3>Ventas</h3>
+
+            <h1>{{ resumen.ventas }}</h1>
+
+        </div>
+
+        <div class="mini-card">
+
+            <h3>Riesgo</h3>
+
+            <h1>{{ resumen.riesgo }}</h1>
+
+        </div>
+
+    </div>
+
+    <br>
+
+    <a href="/prediccion">
+
+        <button>
+
+            Generar Predicción
+
+        </button>
+
+    </a>
+
+</div>
+
+{% endblock %}

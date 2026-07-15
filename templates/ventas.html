@@ -10,7 +10,7 @@ Ventas
 
     <h2>Registrar Venta</h2>
 
-    <form action="/ventas/registrar" method="POST">
+    <form action="{{ url_for('ventas.registrar') }}" method="POST">
 
         <div class="form-grid">
 
@@ -18,13 +18,17 @@ Ventas
 
                 <label>Producto</label>
 
-                <select name="producto_id" required>
+                <select name="producto_id" id="producto" required>
 
                     <option value="">Seleccione un producto</option>
 
                     {% for producto in productos %}
 
-                    <option value="{{ producto.id }}">
+                    <option
+                        value="{{ producto.id }}"
+                        data-precio="{{ producto.precio }}"
+                        data-stock="{{ producto.stock }}"
+                        data-minimo="{{ producto.stock_minimo }}">
 
                         {{ producto.nombre }}
 
@@ -42,6 +46,7 @@ Ventas
 
                 <input
                     type="number"
+                    id="cantidad"
                     name="cantidad"
                     min="1"
                     required>
@@ -55,14 +60,58 @@ Ventas
                 <input
                     type="date"
                     name="fecha"
-                    value="{{ '' }}"
+                    value="{{ today }}"
                     required>
 
             </div>
 
         </div>
 
-        <button>
+        <div class="info-producto">
+
+            <div class="info-item">
+
+                <span>Precio</span>
+
+                <strong id="precio">
+
+                    S/. --
+
+                </strong>
+
+            </div>
+
+            <div class="info-item">
+
+                <span>Stock Disponible</span>
+
+                <strong id="stock">
+
+                    --
+
+                </strong>
+
+            </div>
+
+            <div class="info-item">
+
+                <span>Stock Mínimo</span>
+
+                <strong id="stock_minimo">
+
+                    --
+
+                </strong>
+
+            </div>
+
+        </div>
+
+        <div id="mensaje-stock"></div>
+
+        <button
+            id="btnRegistrar"
+            class="btn-guardar">
 
             Registrar Venta
 
@@ -117,5 +166,7 @@ Ventas
     </table>
 
 </div>
+
+<script src="{{ url_for('static', filename='js/ventas.js') }}"></script>
 
 {% endblock %}

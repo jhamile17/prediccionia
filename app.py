@@ -3,12 +3,14 @@ from database.db import get_connection
 
 from routes.producto_routes import producto_bp
 from routes.venta_routes import venta_bp
+from routes.dashboard_routes import dashboard_bp
 
 app = Flask(__name__)
 
 # Registrar Blueprints
 app.register_blueprint(producto_bp)
 app.register_blueprint(venta_bp)
+app.register_blueprint(dashboard_bp)
 
 
 @app.route("/")
