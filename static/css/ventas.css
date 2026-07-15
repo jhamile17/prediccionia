@@ -342,3 +342,53 @@ grid-template-columns:1fr;
 }
 
 }
+
+.acciones-superiores{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin:25px 0;
+
+}
+
+.buscador input{
+
+    width:280px;
+
+    padding:10px 15px;
+
+    border:1px solid #dcdcdc;
+
+    border-radius:8px;
+
+    font-size:15px;
+
+}
+
+.btn-nuevo{
+
+    background:#198754;
+
+    color:#fff;
+
+    text-decoration:none;
+
+    padding:12px 22px;
+
+    border-radius:8px;
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+.btn-nuevo:hover{
+
+    background:#146c43;
+
+}
