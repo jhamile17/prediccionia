@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Productos
+{% endblock %}
+
+{% block content %}
+
+<h2>Listado de Productos</h2>
+
+<table border="1" cellpadding="8">
+
+    <tr>
+
+        <th>ID</th>
+
+        <th>Categoría</th>
+
+        <th>Nombre</th>
+
+        <th>Precio</th>
+
+        <th>Stock</th>
+
+        <th>Stock mínimo</th>
+
+    </tr>
+
+    {% for producto in productos %}
+
+    <tr>
+
+        <td>{{ producto.id }}</td>
+
+        <td>{{ producto.categoria }}</td>
+
+        <td>{{ producto.nombre }}</td>
+
+        <td>S/. {{ producto.precio }}</td>
+
+        <td>{{ producto.stock }}</td>
+
+        <td>{{ producto.stock_minimo }}</td>
+
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+{% endblock %}
