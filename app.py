@@ -1,5 +1,6 @@
 from flask import Flask
 from database.db import get_connection
+<<<<<<< HEAD
 from routes.producto_routes import producto_bp
 
 app = Flask(__name__)
@@ -7,6 +8,11 @@ app = Flask(__name__)
 # Registrar Blueprints
 app.register_blueprint(producto_bp)
 
+=======
+from routes.venta_routes import venta_bp
+app = Flask(__name__)
+app.register_blueprint(venta_bp)
+>>>>>>> 148cde8 (ventas)
 
 @app.route("/")
 def inicio():
