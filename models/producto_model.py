@@ -13,16 +13,12 @@ class ProductoModel:
 
                 sql = """
                 SELECT
-                    p.id,
-                    c.nombre AS categoria,
-                    p.nombre,
-                    p.precio,
-                    p.stock,
-                    p.stock_minimo
-                FROM productos p
-                INNER JOIN categorias c
-                    ON p.categoria_id = c.id
-                ORDER BY p.id
+                    id,
+                    nombre,
+                    precio,
+                    stock
+                FROM productos
+                ORDER BY id
                 """
 
                 cursor.execute(sql)
