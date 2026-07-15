@@ -1,132 +1,102 @@
-.ventas-container{
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Segoe UI,Arial,sans-serif;
+}
 
+body{
+    background:#f4f6f9;
+}
+
+nav{
+    background:#198754;
+    color:#fff;
+    padding:15px 40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+nav a{
+    color:#fff;
+    text-decoration:none;
+    margin-left:20px;
+    font-weight:bold;
+}
+
+.container{
     width:95%;
-
     max-width:1200px;
-
-    margin:auto;
-
+    margin:30px auto;
 }
 
 .card{
-
     background:#fff;
-
     border-radius:10px;
-
-    box-shadow:0 3px 12px rgba(0,0,0,.15);
-
-    overflow:hidden;
-
+    padding:25px;
+    box-shadow:0 5px 15px rgba(0,0,0,.1);
+    margin-bottom:25px;
 }
 
-.card-header{
-
-    background:#198754;
-
-    color:white;
-
-    padding:15px 20px;
-
+.card h2{
+    margin-bottom:20px;
+    color:#198754;
 }
 
-.card-body{
-
-    padding:20px;
-
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
 }
 
 .form-group{
-
-    margin-bottom:18px;
-
+    display:flex;
+    flex-direction:column;
 }
 
 .form-group label{
-
-    display:block;
-
     margin-bottom:8px;
-
     font-weight:bold;
-
 }
 
 .form-group input,
 .form-group select{
-
-    width:100%;
-
-    padding:12px;
-
-    border:1px solid #ddd;
-
+    padding:10px;
+    border:1px solid #ccc;
     border-radius:6px;
-
-    outline:none;
-
 }
 
-.form-group input:focus,
-.form-group select:focus{
-
-    border-color:#198754;
-
-}
-
-.btn-guardar{
-
+button{
+    margin-top:20px;
     background:#198754;
-
     color:white;
-
     border:none;
-
-    padding:12px 20px;
-
+    padding:12px 25px;
     border-radius:6px;
-
     cursor:pointer;
-
-    font-size:15px;
-
 }
 
-.btn-guardar:hover{
-
+button:hover{
     background:#157347;
-
 }
 
 table{
-
     width:100%;
-
     border-collapse:collapse;
-
 }
 
 thead{
-
     background:#198754;
-
-    color:white;
-
+    color:#fff;
 }
 
-th,
-td{
-
+th,td{
     padding:12px;
-
-    border-bottom:1px solid #ddd;
-
     text-align:center;
-
+    border-bottom:1px solid #ddd;
 }
 
 tbody tr:hover{
-
-    background:#f3f3f3;
-
+    background:#f8f9fa;
 }

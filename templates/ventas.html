@@ -6,132 +6,115 @@ Ventas
 
 {% block content %}
 
-<div class="ventas-container">
+<div class="card">
 
-    <div class="card">
+    <h2>Registrar Venta</h2>
 
-        <div class="card-header">
+    <form action="/ventas/registrar" method="POST">
 
-            <h2>Registrar Venta</h2>
+        <div class="form-grid">
 
-        </div>
+            <div class="form-group">
 
-        <div class="card-body">
+                <label>Producto</label>
 
-            <form action="{{ url_for('ventas.registrar') }}" method="POST">
+                <select name="producto_id" required>
 
-                <div class="form-group">
+                    <option value="">Seleccione un producto</option>
 
-                    <label>Producto</label>
+                    {% for producto in productos %}
 
-                    <select name="producto_id" required>
+                    <option value="{{ producto.id }}">
 
-                        <option value="">Seleccione un producto</option>
+                        {{ producto.nombre }}
 
-                        {% for producto in productos %}
-
-                        <option value="{{ producto.id }}">
-
-                            {{ producto.nombre }}
-
-                        </option>
-
-                        {% endfor %}
-
-                    </select>
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Cantidad</label>
-
-                    <input
-                        type="number"
-                        name="cantidad"
-                        min="1"
-                        required>
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Fecha</label>
-
-                    <input
-                        type="date"
-                        name="fecha"
-                        required>
-
-                </div>
-
-                <button class="btn-guardar">
-
-                    Registrar Venta
-
-                </button>
-
-            </form>
-
-        </div>
-
-    </div>
-
-    <br>
-
-    <div class="card">
-
-        <div class="card-header">
-
-            <h2>Historial de Ventas</h2>
-
-        </div>
-
-        <div class="card-body">
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>ID</th>
-
-                        <th>Producto</th>
-
-                        <th>Cantidad</th>
-
-                        <th>Fecha</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% for venta in ventas %}
-
-                    <tr>
-
-                        <td>{{ venta.id }}</td>
-
-                        <td>{{ venta.producto }}</td>
-
-                        <td>{{ venta.cantidad }}</td>
-
-                        <td>{{ venta.fecha }}</td>
-
-                    </tr>
+                    </option>
 
                     {% endfor %}
 
-                </tbody>
+                </select>
 
-            </table>
+            </div>
+
+            <div class="form-group">
+
+                <label>Cantidad</label>
+
+                <input
+                    type="number"
+                    name="cantidad"
+                    min="1"
+                    required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Fecha</label>
+
+                <input
+                    type="date"
+                    name="fecha"
+                    value="{{ '' }}"
+                    required>
+
+            </div>
 
         </div>
 
-    </div>
+        <button>
+
+            Registrar Venta
+
+        </button>
+
+    </form>
+
+</div>
+
+<div class="card">
+
+    <h2>Historial de Ventas</h2>
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>ID</th>
+
+                <th>Producto</th>
+
+                <th>Cantidad</th>
+
+                <th>Fecha</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for venta in ventas %}
+
+            <tr>
+
+                <td>{{ venta.id }}</td>
+
+                <td>{{ venta.producto }}</td>
+
+                <td>{{ venta.cantidad }}</td>
+
+                <td>{{ venta.fecha }}</td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
 
 </div>
 
