@@ -1,18 +1,15 @@
 from flask import Flask
 from database.db import get_connection
-<<<<<<< HEAD
+
 from routes.producto_routes import producto_bp
+from routes.venta_routes import venta_bp
 
 app = Flask(__name__)
 
 # Registrar Blueprints
 app.register_blueprint(producto_bp)
-
-=======
-from routes.venta_routes import venta_bp
-app = Flask(__name__)
 app.register_blueprint(venta_bp)
->>>>>>> 148cde8 (ventas)
+
 
 @app.route("/")
 def inicio():
@@ -29,7 +26,8 @@ def inicio():
         <h2>✅ Conexión exitosa</h2>
         <p>Versión MySQL: {version['VERSION()']}</p>
         <hr>
-        <a href="/productos">Ir al módulo de productos</a>
+        <a href="/productos">Ir al módulo de productos</a><br>
+        <a href="/ventas">Ir al módulo de ventas</a>
         """
 
     except Exception as e:
