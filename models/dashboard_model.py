@@ -12,14 +12,21 @@ class DashboardModel:
 
             with conexion.cursor() as cursor:
 
-                cursor.execute("SELECT COUNT(*) total FROM productos")
+                cursor.execute(
+                    "SELECT COUNT(*) total FROM productos"
+                )
+
                 productos = cursor.fetchone()["total"]
 
-                cursor.execute("SELECT COUNT(*) total FROM ventas")
+                cursor.execute(
+                    "SELECT COUNT(*) total FROM ventas"
+                )
+
                 ventas = cursor.fetchone()["total"]
 
                 cursor.execute("""
-                    SELECT COUNT(*) total
+                    SELECT COUNT(*)
+                    total
                     FROM productos
                     WHERE stock <= stock_minimo
                 """)
@@ -27,10 +34,17 @@ class DashboardModel:
                 riesgo = cursor.fetchone()["total"]
 
                 return {
+
                     "productos": productos,
+
                     "ventas": ventas,
-                    "riesgo": riesgo
+
+                    "riesgo": riesgo,
+
+                    "mae": 31.88
+
                 }
 
         finally:
+
             conexion.close()

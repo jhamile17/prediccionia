@@ -19,7 +19,9 @@ class EntrenadorIA:
                 "stock",
                 "stock_minimo",
                 "anio",
-                "mes"
+                "mes",
+                "ventas_mes_anterior",
+                "promedio_3_meses"
             ]
         ]
 
@@ -33,35 +35,21 @@ class EntrenadorIA:
         )
 
         modelo = RandomForestRegressor(
-            n_estimators=100,
+            n_estimators=200,
             random_state=42
         )
 
-        modelo.fit(
-            X_train,
-            y_train
-        )
+        modelo.fit(X_train, y_train)
 
         predicciones = modelo.predict(X_test)
 
-        error = mean_absolute_error(
-            y_test,
-            predicciones
-        )
+        mae = mean_absolute_error(y_test, predicciones)
 
-        print()
-
-        print("===================================")
+        print("\n==============================")
         print("MODELO ENTRENADO")
-        print("===================================")
+        print("==============================")
+        print(f"MAE: {mae:.2f}")
 
-        print(f"Error MAE: {error:.2f}")
+        joblib.dump(modelo, "ia/modelo.pkl")
 
-        joblib.dump(
-            modelo,
-            "ia/modelo.pkl"
-        )
-
-        print()
-
-        print("Modelo guardado correctamente.")
+        print("Modelo guardado en ia/modelo.pkl")

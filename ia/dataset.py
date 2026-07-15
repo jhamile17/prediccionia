@@ -1,6 +1,5 @@
 import pandas as pd
-from sqlalchemy import create_engine
-from config import Config
+from database.db import get_connection
 
 
 class DatasetIA:
@@ -8,27 +7,36 @@ class DatasetIA:
     @staticmethod
     def obtener_dataset():
 
-        engine = create_engine(
-            f"mysql+pymysql://{Config.DB_USER}:{Config.DB_PASSWORD}@{Config.DB_HOST}:{Config.DB_PORT}/{Config.DB_NAME}"
-        )
+        conexion = get_connection()
 
-        consulta = """
-        SELECT
-            p.id,
-            p.nombre,
-            p.precio,
-            p.stock,
-            p.stock_minimo,
-            v.cantidad,
-            v.fecha
-        FROM ventas v
-        INNER JOIN productos p
-            ON p.id = v.producto_id
-        """
+        try:
 
-        df = pd.read_sql(consulta, engine)
+            with conexion.cursor() as cursor:
 
-        return df
+                cursor.execute("""
+                    SELECT
+                        p.id,
+                        p.nombre,
+                        p.precio,
+                        p.stock,
+                        p.stock_minimo,
+                        v.cantidad,
+                        v.fecha
+                    FROM ventas v
+                    INNER JOIN productos p
+                        ON p.id = v.producto_id
+                    ORDER BY v.fecha
+                """)
+
+                datos = cursor.fetchall()
+
+            df = pd.DataFrame(datos)
+
+            return df
+
+        finally:
+
+            conexion.close()
 
     @staticmethod
     def preparar_dataset():
@@ -40,15 +48,8 @@ class DatasetIA:
 
         df["fecha"] = pd.to_datetime(
             df["fecha"],
-            format="%Y-%m-%d",
-            errors="coerce"
+            format="%Y-%m-%d"
         )
-
-        # Verificar si hay fechas inválidas
-        if df["fecha"].isna().any():
-            print("\nHay fechas inválidas:")
-            print(df[df["fecha"].isna()])
-            raise ValueError("Existen fechas inválidas en la base de datos.")
 
         df["anio"] = df["fecha"].dt.year
         df["mes"] = df["fecha"].dt.month
@@ -72,6 +73,26 @@ class DatasetIA:
         dataset.rename(
             columns={"cantidad": "demanda"},
             inplace=True
+        )
+
+        dataset = dataset.sort_values(
+            ["id", "anio", "mes"]
+        )
+
+        dataset["ventas_mes_anterior"] = (
+            dataset.groupby("id")["demanda"]
+            .shift(1)
+            .fillna(0)
+        )
+
+        dataset["promedio_3_meses"] = (
+            dataset.groupby("id")["demanda"]
+            .rolling(
+                window=3,
+                min_periods=1
+            )
+            .mean()
+            .reset_index(level=0, drop=True)
         )
 
         return dataset

@@ -16,6 +16,8 @@ def dashboard():
 
         "dashboard.html",
 
-        resumen=DashboardService.resumen()
+        resumen=DashboardService.resumen(),
+
+        predicciones=DashboardService.prediccion()
 
     )

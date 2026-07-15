@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
 {% block title %}
-Dashboard
+Dashboard IA
 {% endblock %}
 
 {% block content %}
 
 <div class="card">
 
-    <h2>Sistema de Predicción de Demanda</h2>
+    <h2>Dashboard IA</h2>
 
     <div class="cards">
 
@@ -36,19 +36,66 @@ Dashboard
 
         </div>
 
+        <div class="mini-card">
+
+            <h3>MAE</h3>
+
+            <h1>{{ resumen.mae }}</h1>
+
+        </div>
+
     </div>
 
-    <br>
+</div>
 
-    <a href="/prediccion">
 
-        <button>
+<div class="card">
 
-            Generar Predicción
+<h2>Predicción de Demanda</h2>
 
-        </button>
+<table>
 
-    </a>
+<thead>
+
+<tr>
+
+<th>Producto</th>
+
+<th>Stock</th>
+
+<th>Demanda</th>
+
+<th>Reponer</th>
+
+<th>Estado</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for fila in predicciones %}
+
+<tr>
+
+<td>{{ fila.nombre }}</td>
+
+<td>{{ fila.stock }}</td>
+
+<td>{{ fila.demanda_estimada }}</td>
+
+<td>{{ fila.reponer }}</td>
+
+<td>{{ fila.estado }}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
 
 </div>
 
