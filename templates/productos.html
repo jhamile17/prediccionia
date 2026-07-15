@@ -1,137 +1,57 @@
 {% extends 'base.html' %}
 
 {% block title %}
-Ventas
+Productos
 {% endblock %}
 
 {% block content %}
 
-<div class="ventas-container">
+<div class="card">
 
-    <div class="card">
+    <h2>Listado de Productos</h2>
 
-        <div class="card-header">
+    <table>
 
-            <h2>Registrar Venta</h2>
+        <thead>
 
-        </div>
+            <tr>
 
-        <div class="card-body">
+                <th>ID</th>
+                <th>Categoría</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Stock Mínimo</th>
 
-            <form action="{{ url_for('ventas.registrar') }}" method="POST">
+            </tr>
 
-                <div class="form-group">
+        </thead>
 
-                    <label>Producto</label>
+        <tbody>
 
-                    <select name="producto_id" required>
+            {% for producto in productos %}
 
-                        <option value="">Seleccione un producto</option>
+            <tr>
 
-                        {% for producto in productos %}
+                <td>{{ producto.id }}</td>
 
-                        <option value="{{ producto.id }}">
+                <td>{{ producto.categoria }}</td>
 
-                            {{ producto.nombre }}
+                <td>{{ producto.nombre }}</td>
 
-                        </option>
+                <td>S/. {{ producto.precio }}</td>
 
-                        {% endfor %}
+                <td>{{ producto.stock }}</td>
 
-                    </select>
+                <td>{{ producto.stock_minimo }}</td>
 
-                </div>
+            </tr>
 
-                <div class="form-group">
+            {% endfor %}
 
-                    <label>Cantidad</label>
+        </tbody>
 
-                    <input
-                        type="number"
-                        name="cantidad"
-                        min="1"
-                        required>
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Fecha</label>
-
-                    <input
-                        type="date"
-                        name="fecha"
-                        required>
-
-                </div>
-
-                <button class="btn-guardar">
-
-                    Registrar Venta
-
-                </button>
-
-            </form>
-
-        </div>
-
-    </div>
-
-    <br>
-
-    <div class="card">
-
-        <div class="card-header">
-
-            <h2>Historial de Ventas</h2>
-
-        </div>
-
-        <div class="card-body">
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>ID</th>
-
-                        <th>Producto</th>
-
-                        <th>Cantidad</th>
-
-                        <th>Fecha</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% for venta in ventas %}
-
-                    <tr>
-
-                        <td>{{ venta.id }}</td>
-
-                        <td>{{ venta.producto }}</td>
-
-                        <td>{{ venta.cantidad }}</td>
-
-                        <td>{{ venta.fecha }}</td>
-
-                    </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
+    </table>
 
 </div>
 
