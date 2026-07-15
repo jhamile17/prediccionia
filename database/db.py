@@ -1,6 +1,10 @@
 import pymysql
 from config import Config
 
+print("HOST:", Config.DB_HOST)
+print("PORT:", Config.DB_PORT)
+print("USER:", Config.DB_USER)
+print("DATABASE:", Config.DB_NAME)
 
 def get_connection():
     return pymysql.connect(

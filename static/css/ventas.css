@@ -1,0 +1,132 @@
+.ventas-container{
+
+    width:95%;
+
+    max-width:1200px;
+
+    margin:auto;
+
+}
+
+.card{
+
+    background:#fff;
+
+    border-radius:10px;
+
+    box-shadow:0 3px 12px rgba(0,0,0,.15);
+
+    overflow:hidden;
+
+}
+
+.card-header{
+
+    background:#198754;
+
+    color:white;
+
+    padding:15px 20px;
+
+}
+
+.card-body{
+
+    padding:20px;
+
+}
+
+.form-group{
+
+    margin-bottom:18px;
+
+}
+
+.form-group label{
+
+    display:block;
+
+    margin-bottom:8px;
+
+    font-weight:bold;
+
+}
+
+.form-group input,
+.form-group select{
+
+    width:100%;
+
+    padding:12px;
+
+    border:1px solid #ddd;
+
+    border-radius:6px;
+
+    outline:none;
+
+}
+
+.form-group input:focus,
+.form-group select:focus{
+
+    border-color:#198754;
+
+}
+
+.btn-guardar{
+
+    background:#198754;
+
+    color:white;
+
+    border:none;
+
+    padding:12px 20px;
+
+    border-radius:6px;
+
+    cursor:pointer;
+
+    font-size:15px;
+
+}
+
+.btn-guardar:hover{
+
+    background:#157347;
+
+}
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+thead{
+
+    background:#198754;
+
+    color:white;
+
+}
+
+th,
+td{
+
+    padding:12px;
+
+    border-bottom:1px solid #ddd;
+
+    text-align:center;
+
+}
+
+tbody tr:hover{
+
+    background:#f3f3f3;
+
+}
