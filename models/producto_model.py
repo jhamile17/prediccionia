@@ -9,21 +9,16 @@ class ProductoModel:
         conexion = get_connection()
 
         try:
-
             with conexion.cursor() as cursor:
 
                 sql = """
-                SELECT
-                    p.id,
-                    c.nombre AS categoria,
-                    p.nombre,
-                    p.precio,
-                    p.stock,
-                    p.stock_minimo
-                FROM productos p
-                INNER JOIN categorias c
-                    ON p.categoria_id = c.id
-                ORDER BY p.id
+                    SELECT
+                        id,
+                        nombre,
+                        precio,
+                        stock
+                    FROM productos
+                    ORDER BY id
                 """
 
                 cursor.execute(sql)
@@ -31,5 +26,4 @@ class ProductoModel:
                 return cursor.fetchall()
 
         finally:
-
             conexion.close()

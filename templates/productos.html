@@ -10,6 +10,17 @@ Productos
 
     <h2>Listado de Productos</h2>
 
+    <div class="acciones-superiores">
+
+        <a href="{{ url_for('productos.nuevo_producto') }}"
+        class="btn-nuevo">
+
+            + Nuevo Producto
+
+        </a>
+
+    </div>
+
     <table>
 
         <thead>
@@ -17,11 +28,10 @@ Productos
             <tr>
 
                 <th>ID</th>
-                <th>Categoría</th>
                 <th>Nombre</th>
                 <th>Precio</th>
                 <th>Stock</th>
-                <th>Stock Mínimo</th>
+                <th>Acciones</th>
 
             </tr>
 
@@ -34,16 +44,16 @@ Productos
             <tr>
 
                 <td>{{ producto.id }}</td>
-
-                <td>{{ producto.categoria }}</td>
-
                 <td>{{ producto.nombre }}</td>
-
                 <td>S/. {{ producto.precio }}</td>
-
                 <td>{{ producto.stock }}</td>
 
-                <td>{{ producto.stock_minimo }}</td>
+                <td>
+
+                    <button>Editar</button>
+                    <button>Eliminar</button>
+
+                </td>
 
             </tr>
 

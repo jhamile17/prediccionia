@@ -16,3 +16,8 @@ def productos():
         "productos.html",
         productos=lista
     )
+
+@producto_bp.route("/productos/nuevo")
+def nuevo_producto():
+
+    return render_template("producto_nuevo.html")
