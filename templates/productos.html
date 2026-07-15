@@ -8,64 +8,60 @@ Productos
 
 <div class="card">
 
-    <h2>Listado de Productos</h2>
+    <h2>Nuevo Producto</h2>
 
-    <div class="acciones-superiores">
+    <form method="POST">
 
-        <div class="buscador">
-
-            <input
-                type="text"
-                placeholder="Buscar producto...">
-
+        <div>
+            <label>Nombre</label>
+            <input type="text" name="nombre" required>
         </div>
 
-        <a
-            href="{{ url_for('productos.nuevo_producto') }}"
-            class="btn-nuevo">
+        <div>
+            <label>Precio</label>
+            <input type="number" step="0.01" name="precio" required>
+        </div>
 
-            + Nuevo Producto
+        <div>
+            <label>Stock</label>
+            <input type="number" name="stock" required>
+        </div>
 
-        </a>
+        <br>
 
-    </div>
+        <button type="submit">Guardar Producto</button>
+
+    </form>
+
+    <hr>
+
+    <h2>Listado de Productos</h2>
 
     <table>
 
         <thead>
-
             <tr>
-
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Precio</th>
                 <th>Stock</th>
                 <th>Acciones</th>
-
             </tr>
-
         </thead>
 
         <tbody>
 
             {% for producto in productos %}
-
             <tr>
-
                 <td>{{ producto.id }}</td>
                 <td>{{ producto.nombre }}</td>
                 <td>S/. {{ producto.precio }}</td>
                 <td>{{ producto.stock }}</td>
-
                 <td>
-
                     <button>Editar</button>
                     <button>Eliminar</button>
-
                 </td>
-
             </tr>
-
             {% endfor %}
 
         </tbody>
