@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -22,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'rol_id',
     ];
 
     /**
@@ -45,5 +47,35 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Relación con el rol.
+     */
+    public function rol(): BelongsTo
+    {
+        return $this->belongsTo(Rol::class, 'rol_id');
+    }
+
+    /**
+     * Ventas registradas por el usuario.
+     */
+    public function ventas(): HasMany
+    {
+        return $this->hasMany(
+            Venta::class,
+            'usuario_id'
+        );
+    }
+
+    /**
+     * Movimientos de inventario realizados por el usuario.
+     */
+    public function movimientosInventario(): HasMany
+    {
+        return $this->hasMany(
+            MovimientoInventario::class,
+            'usuario_id'
+        );
     }
 }
