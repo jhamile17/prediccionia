@@ -6,19 +6,28 @@ use App\Services\DemandaService;
 
 class DashboardController extends Controller
 {
-    public function index(DemandaService $demandaService)
-    {
-        $prediccionesMensuales =
-            $demandaService->obtenerPrediccionesMensuales(
-                2026,
-                9
-            );
+    public function __construct(
+        private DemandaService $demandaService
+    ) {
+    }
 
-        dd($prediccionesMensuales);
+    public function index()
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | RESUMEN DE REPOSICIÓN
+        |--------------------------------------------------------------------------
+        | Obtenemos los datos reales generados por el sistema
+        | de predicción.
+        |--------------------------------------------------------------------------
+        */
+
+        $resumenReposicion =
+            $this->demandaService->obtenerResumenReposicion();
 
         return view(
-            'dashboard',
-            compact('prediccionesMensuales')
+            'dashboard.index',
+            compact('resumenReposicion')
         );
     }
 }
