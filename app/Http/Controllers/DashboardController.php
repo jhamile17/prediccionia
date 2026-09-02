@@ -8,8 +8,17 @@ class DashboardController extends Controller
 {
     public function index(DemandaService $demandaService)
     {
-        $resumenReposicion = $demandaService->obtenerResumenReposicion();
+        $prediccionesMensuales =
+            $demandaService->obtenerPrediccionesMensuales(
+                2026,
+                9
+            );
 
-        return view('dashboard', compact('resumenReposicion'));
+        dd($prediccionesMensuales);
+
+        return view(
+            'dashboard',
+            compact('prediccionesMensuales')
+        );
     }
 }
