@@ -15,20 +15,16 @@ class PrediccionController extends Controller
     ) {
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Predicción diaria - API
+    |--------------------------------------------------------------------------
+    */
+
     public function predecir(Request $request)
     {
-        /*
-         * =====================================================
-         * OBTENER EL JSON DE FORMA SEGURA
-         * =====================================================
-         */
-
         $datos = $request->json()->all();
 
-        /*
-         * Si Laravel no pudo interpretar automáticamente
-         * el JSON, lo interpretamos manualmente.
-         */
         if (empty($datos)) {
             $contenido = $request->getContent();
 
@@ -42,12 +38,6 @@ class PrediccionController extends Controller
                 ], 400);
             }
         }
-
-        /*
-         * =====================================================
-         * VALIDACIÓN
-         * =====================================================
-         */
 
         $validator = Validator::make($datos, [
             'producto_id' => [
@@ -70,37 +60,77 @@ class PrediccionController extends Controller
             ], 422);
         }
 
-        /*
-         * =====================================================
-         * PREPARAR DATOS PARA EL MODELO
-         * =====================================================
-         */
-
         $datosPrediccion = $this->demandaService->prepararDatos(
             $datos['producto_id'],
             $datos['fecha']
         );
 
-        /*
-         * =====================================================
-         * EJECUTAR PREDICCIÓN
-         * =====================================================
-         */
-
         $resultado = $this->predictionService->predecir(
             $datosPrediccion
         );
-
-        /*
-         * =====================================================
-         * RESPUESTA
-         * =====================================================
-         */
 
         return response()->json([
             'success' => true,
             'datos' => $datosPrediccion,
             'resultado' => $resultado,
         ]);
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Predicción mensual - Vista web
+    |--------------------------------------------------------------------------
+    */
+
+    public function mensual(Request $request)
+    {
+        $anio = $request->input('anio');
+        $mes = $request->input('mes');
+
+        $anio = $anio
+            ? (int) $anio
+            : now()->year;
+
+        $mes = $mes
+            ? (int) $mes
+            : now()->month;
+
+        /*
+         * Validar mes y año.
+         */
+        if ($mes < 1 || $mes > 12) {
+            $mes = now()->month;
+        }
+
+        if ($anio < 2020 || $anio > 2100) {
+            $anio = now()->year;
+        }
+
+        /*
+         * Obtener predicciones mensuales
+         * usando el servicio existente.
+         */
+        $predicciones = $this->demandaService
+            ->obtenerPrediccionesMensuales(
+                $anio,
+                $mes
+            );
+
+        /*
+         * Nombre del mes para la interfaz.
+         */
+        $nombreMes = \Carbon\Carbon::create(
+            $anio,
+            $mes,
+            1
+        )->translatedFormat('F');
+
+        return view('prediccion.mensual', compact(
+            'predicciones',
+            'anio',
+            'mes',
+            'nombreMes'
+        ));
     }
 }

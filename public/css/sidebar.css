@@ -192,3 +192,29 @@
     }
 
 }
+
+/* =========================================================
+   CERRAR SESIÓN
+========================================================= */
+
+.logout-form {
+    margin: 0;
+    padding: 0;
+}
+
+.logout-button {
+    width: 100%;
+    border: none;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.logout-button:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.logout-button i {
+    color: inherit;
+}

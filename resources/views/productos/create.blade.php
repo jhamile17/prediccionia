@@ -353,20 +353,23 @@
 
                     <div class="form-group">
 
-                        <label>
+                        <label for="activo">
                             Estado
                         </label>
 
-                        <label class="switch-field">
+                        <label class="product-status-switch">
 
                             <input
                                 type="checkbox"
+                                id="activo"
                                 name="activo"
                                 value="1"
                                 {{ old('activo', true) ? 'checked' : '' }}
                             >
 
-                            <span>
+                            <span class="product-switch-slider"></span>
+
+                            <span class="product-switch-text">
                                 Producto activo
                             </span>
 

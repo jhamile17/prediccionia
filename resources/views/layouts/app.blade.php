@@ -17,7 +17,6 @@
     <link rel="stylesheet" href="{{ asset('css/layout.css') }}">
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/topbar.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/inventario.css') }}">
 
     {{-- Bootstrap Icons --}}
     <link
@@ -93,6 +92,15 @@
                 <span>Productos</span>
             </a>
 
+            {{-- Categorías --}}
+            <a
+                href="{{ route('categorias.index') }}"
+                class="menu-item {{ request()->routeIs('categorias.*') ? 'active' : '' }}"
+            >
+                <i class="bi bi-tags"></i>
+                <span>Categorías</span>
+            </a>
+
 
             {{-- Inventario --}}
             <a
@@ -117,10 +125,9 @@
             </span>
 
             {{-- Predicción mensual --}}
-            {{-- Ruta todavía no creada --}}
-            <a
-                href="#"
-                class="menu-item"
+            <a 
+                href="{{ route('prediccion.mensual') }}" 
+                class="menu-item {{ request()->routeIs('prediccion.*') ? 'active' : '' }}"
             >
                 <i class="bi bi-cpu"></i>
                 <span>Predicción mensual</span>
@@ -130,19 +137,18 @@
             {{-- Análisis de demanda --}}
             {{-- Ruta todavía no creada --}}
             <a
-                href="#"
-                class="menu-item"
+                href="{{ route('analisis.index') }}"
+                class="menu-item {{ request()->routeIs('analisis.*') ? 'active' : '' }}"
             >
                 <i class="bi bi-bar-chart-line"></i>
                 <span>Análisis de demanda</span>
             </a>
 
-
             {{-- Alertas --}}
             {{-- Ruta todavía no creada --}}
             <a
-                href="#"
-                class="menu-item"
+                href="{{ route('alertas.index') }}"
+                class="menu-item {{ request()->routeIs('alertas.*') ? 'active' : '' }}"
             >
                 <i class="bi bi-exclamation-triangle"></i>
                 <span>Alertas</span>
@@ -163,8 +169,8 @@
 
             {{-- Ruta todavía no creada --}}
             <a
-                href="#"
-                class="menu-item"
+                href="{{ route('reportes.index') }}"
+                class="menu-item {{ request()->routeIs('reportes.*') ? 'active' : '' }}"
             >
                 <i class="bi bi-file-earmark-bar-graph"></i>
                 <span>Reportes</span>
@@ -179,14 +185,31 @@
 
         <div class="sidebar-bottom">
 
-            {{-- Ruta todavía no creada --}}
+            {{-- CONFIGURACIÓN --}}
             <a
-                href="#"
-                class="menu-item"
+                href="{{ route('configuracion.index') }}"
+                class="menu-item {{ request()->routeIs('configuracion.*') ? 'active' : '' }}"
             >
                 <i class="bi bi-gear"></i>
                 <span>Configuración</span>
             </a>
+
+            {{-- CERRAR SESIÓN --}}
+            <form
+                action="{{ route('logout') }}"
+                method="POST"
+                class="logout-form"
+            >
+                @csrf
+
+                <button
+                    type="submit"
+                    class="menu-item logout-button"
+                >
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Cerrar sesión</span>
+                </button>
+            </form>
 
         </div>
 

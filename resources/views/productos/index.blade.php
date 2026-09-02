@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/productos.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/productos.css') }}">
 @endpush
 
 @section('title', 'Productos | PrediccionIA')
@@ -61,11 +61,52 @@
 
 
     {{-- =====================================================
+         MENSAJE DE ERROR
+    ====================================================== --}}
+
+    @if(session('error'))
+
+        <div class="alert-error">
+
+            <i class="bi bi-exclamation-circle-fill"></i>
+
+            <span>
+                {{ session('error') }}
+            </span>
+
+        </div>
+
+    @endif
+
+
+    {{-- =====================================================
+         ERRORES DE VALIDACIÓN
+    ====================================================== --}}
+
+    @if($errors->any())
+
+        <div class="alert-error">
+
+            <i class="bi bi-exclamation-circle-fill"></i>
+
+            <div>
+                @foreach($errors->all() as $error)
+                    <div>{{ $error }}</div>
+                @endforeach
+            </div>
+
+        </div>
+
+    @endif
+
+
+    {{-- =====================================================
          RESUMEN
     ====================================================== --}}
 
     <div class="product-summary">
 
+        {{-- TOTAL --}}
         <div class="summary-card">
 
             <div class="summary-icon">
@@ -74,12 +115,16 @@
 
             <div>
                 <span>Total productos</span>
-                <strong>{{ $productos->count() }}</strong>
+
+                <strong>
+                    {{ $productos->count() }}
+                </strong>
             </div>
 
         </div>
 
 
+        {{-- STOCK BAJO --}}
         <div class="summary-card">
 
             <div class="summary-icon warning">
@@ -87,16 +132,21 @@
             </div>
 
             <div>
-                <span>Stock bajo</span>
+
+                <span>
+                    Stock bajo
+                </span>
 
                 <strong>
                     {{ $productos->filter(fn($p) => $p->stock <= $p->stock_minimo)->count() }}
                 </strong>
+
             </div>
 
         </div>
 
 
+        {{-- ACTIVOS --}}
         <div class="summary-card">
 
             <div class="summary-icon success">
@@ -104,16 +154,21 @@
             </div>
 
             <div>
-                <span>Productos activos</span>
+
+                <span>
+                    Productos activos
+                </span>
 
                 <strong>
                     {{ $productos->where('activo', true)->count() }}
                 </strong>
+
             </div>
 
         </div>
 
 
+        {{-- CATEGORÍAS --}}
         <div class="summary-card">
 
             <div class="summary-icon purple">
@@ -121,11 +176,15 @@
             </div>
 
             <div>
-                <span>Categorías</span>
+
+                <span>
+                    Categorías
+                </span>
 
                 <strong>
                     {{ $categorias->count() }}
                 </strong>
+
             </div>
 
         </div>
@@ -139,7 +198,9 @@
 
     <div class="products-panel">
 
-        {{-- FILTROS --}}
+        {{-- =================================================
+             TOOLBAR
+        ================================================== --}}
 
         <div class="products-toolbar">
 
@@ -150,11 +211,13 @@
                 </h2>
 
                 <p>
-                    Consulta los productos registrados en el sistema.
+                    Consulta y administra los productos registrados en el sistema.
                 </p>
 
             </div>
 
+
+            {{-- FILTROS --}}
 
             <form
                 method="GET"
@@ -162,7 +225,7 @@
                 class="products-filters"
             >
 
-                {{-- Buscar --}}
+                {{-- BUSCAR --}}
 
                 <div class="search-box">
 
@@ -178,12 +241,11 @@
                 </div>
 
 
-                {{-- Categoría --}}
+                {{-- CATEGORÍA --}}
 
                 <select
                     name="categoria"
                     class="category-filter"
-                    onchange="this.form.submit()"
                 >
 
                     <option value="">
@@ -208,6 +270,7 @@
                     type="submit"
                     class="btn-filter"
                 >
+                    <i class="bi bi-funnel"></i>
                     Filtrar
                 </button>
 
@@ -216,7 +279,9 @@
         </div>
 
 
-        {{-- TABLA --}}
+        {{-- =================================================
+             TABLA
+        ================================================== --}}
 
         <div class="table-wrapper">
 
@@ -225,12 +290,35 @@
                 <thead>
 
                     <tr>
-                        <th>Producto</th>
-                        <th>Categoría</th>
-                        <th>Precio</th>
-                        <th>Stock</th>
-                        <th>Mínimo</th>
-                        <th>Estado</th>
+
+                        <th>
+                            Producto
+                        </th>
+
+                        <th>
+                            Categoría
+                        </th>
+
+                        <th>
+                            Precio
+                        </th>
+
+                        <th>
+                            Stock
+                        </th>
+
+                        <th>
+                            Mínimo
+                        </th>
+
+                        <th>
+                            Estado
+                        </th>
+
+                        <th class="actions-column">
+                            Acciones
+                        </th>
+
                     </tr>
 
                 </thead>
@@ -242,7 +330,9 @@
 
                         <tr>
 
-                            {{-- PRODUCTO --}}
+                            {{-- =================================================
+                                 PRODUCTO
+                            ================================================== --}}
 
                             <td>
 
@@ -273,29 +363,40 @@
                             </td>
 
 
-                            {{-- CATEGORÍA --}}
+                            {{-- =================================================
+                                 CATEGORÍA
+                            ================================================== --}}
 
                             <td>
 
                                 <span class="category-badge">
+
                                     {{ $producto->categoria?->nombre ?? 'Sin categoría' }}
+
                                 </span>
 
                             </td>
 
 
-                            {{-- PRECIO --}}
+                            {{-- =================================================
+                                 PRECIO
+                            ================================================== --}}
 
                             <td>
 
                                 <strong class="price">
-                                    S/ {{ number_format($producto->precio, 2) }}
+
+                                    S/
+                                    {{ number_format($producto->precio, 2) }}
+
                                 </strong>
 
                             </td>
 
 
-                            {{-- STOCK --}}
+                            {{-- =================================================
+                                 STOCK
+                            ================================================== --}}
 
                             <td>
 
@@ -305,20 +406,28 @@
                                         {{ $producto->stock <= $producto->stock_minimo ? 'low' : '' }}
                                     "
                                 >
+
                                     {{ $producto->stock }}
+
                                 </span>
 
                             </td>
 
 
-                            {{-- STOCK MÍNIMO --}}
+                            {{-- =================================================
+                                 STOCK MÍNIMO
+                            ================================================== --}}
 
                             <td>
+
                                 {{ $producto->stock_minimo }}
+
                             </td>
 
 
-                            {{-- ESTADO --}}
+                            {{-- =================================================
+                                 ESTADO
+                            ================================================== --}}
 
                             <td>
 
@@ -347,6 +456,62 @@
 
                             </td>
 
+
+                            {{-- =================================================
+                                 ACCIONES
+                            ================================================== --}}
+
+                            <td>
+
+                                <div class="product-actions">
+
+                                    {{-- EDITAR --}}
+
+                                    <a
+                                        href="{{ route('productos.edit', $producto) }}"
+                                        class="action-btn edit"
+                                        title="Editar producto"
+                                    >
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+
+
+                                    {{-- ACTIVAR / DESACTIVAR --}}
+
+                                    <form
+                                        action="{{ route('productos.toggle', $producto) }}"
+                                        method="POST"
+                                        class="action-form"
+                                    >
+
+                                        @csrf
+                                        @method('PATCH')
+
+                                        <button
+                                            type="submit"
+                                            class="action-btn {{ $producto->activo ? 'deactivate' : 'activate' }}"
+                                            title="{{ $producto->activo ? 'Desactivar producto' : 'Activar producto' }}"
+                                            onclick="return confirm('{{ $producto->activo ? '¿Deseas desactivar este producto?' : '¿Deseas activar este producto?' }}')"
+                                        >
+
+                                            @if($producto->activo)
+
+                                                <i class="bi bi-toggle-on"></i>
+
+                                            @else
+
+                                                <i class="bi bi-toggle-off"></i>
+
+                                            @endif
+
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                            </td>
+
                         </tr>
 
                     @empty
@@ -354,7 +519,7 @@
                         <tr>
 
                             <td
-                                colspan="6"
+                                colspan="7"
                                 class="empty-products"
                             >
 
@@ -372,8 +537,11 @@
                                     href="{{ route('productos.create') }}"
                                     class="btn-primary"
                                 >
+
                                     <i class="bi bi-plus-lg"></i>
+
                                     Registrar producto
+
                                 </a>
 
                             </td>

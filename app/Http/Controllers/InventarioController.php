@@ -191,7 +191,7 @@ class InventarioController extends Controller
                 'producto_id' =>
                     $producto->id,
 
-                'usuario_id' => null,
+                'usuario_id' => auth()->id(),
 
                 'tipo' =>
                     $tipo,
