@@ -1,181 +1,286 @@
 @extends('layouts.app')
 
-@push('styles')
-<link rel="stylesheet" href="{{ asset('css/inventario.css') }}">
-@endpush
-
 @section('title', 'Inventario | PrediccionIA')
+
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/inventario.css') }}">
+@endpush
 
 @section('content')
 
-<div class="inventory-page">
+@php
 
-    {{-- =====================================================
-         MENSAJE DE ÉXITO
-    ====================================================== --}}
+    /*
+    |--------------------------------------------------------------------------
+    | INDICADORES
+    |--------------------------------------------------------------------------
+    */
+
+    $productosColeccion = collect($productos ?? []);
+
+    $productosSinStock = $productosColeccion
+        ->filter(fn ($producto) => (int) $producto->stock <= 0)
+        ->count();
+
+    $totalMovimientos = count($movimientos ?? []);
+
+@endphp
+
+
+<main class="inventory-page">
+
+
+    {{-- =========================================================
+         MENSAJES
+    ========================================================== --}}
 
     @if(session('success'))
-        <div class="alert-success">
-            <i class="bi bi-check-circle-fill"></i>
 
-            <span>
-                {{ session('success') }}
-            </span>
-        </div>
-    @endif
+        <div class="inventory-alert success">
 
-
-    {{-- =====================================================
-         ERRORES DE VALIDACIÓN
-    ====================================================== --}}
-
-    @if($errors->any())
-        <div class="alert-danger">
-            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div class="inventory-alert-icon">
+                <i class="bi bi-check-lg"></i>
+            </div>
 
             <div>
-                @foreach($errors->all() as $error)
-                    <div>{{ $error }}</div>
-                @endforeach
+
+                <strong>
+                    Operación realizada
+                </strong>
+
+                <span>
+                    {{ session('success') }}
+                </span>
+
             </div>
+
         </div>
+
     @endif
 
 
-    {{-- =====================================================
-         ENCABEZADO
-    ====================================================== --}}
+    @if($errors->any())
 
-    <div class="page-header">
+        <div class="inventory-alert danger">
+
+            <div class="inventory-alert-icon">
+                <i class="bi bi-exclamation-lg"></i>
+            </div>
+
+            <div>
+
+                <strong>
+                    No se pudo completar la operación
+                </strong>
+
+                @foreach($errors->all() as $error)
+
+                    <span>
+                        {{ $error }}
+                    </span>
+
+                @endforeach
+
+            </div>
+
+        </div>
+
+    @endif
+
+
+
+    {{-- =========================================================
+         ENCABEZADO
+    ========================================================== --}}
+
+    <header class="inventory-hero">
 
         <div>
 
-            <span class="page-kicker">
+            <span class="inventory-eyebrow">
                 GESTIÓN DE INVENTARIO
             </span>
 
             <h1>
-                Inventario
+                Control de inventario
             </h1>
 
             <p>
-                Controla el stock disponible y los movimientos de inventario.
+                Consulta el stock disponible y registra los movimientos
+                de tus productos.
             </p>
 
         </div>
 
+
         <button
             type="button"
-            class="btn-primary"
+            class="inventory-primary-button"
             onclick="abrirMovimiento()"
         >
+
             <i class="bi bi-plus-lg"></i>
+
             Registrar movimiento
+
         </button>
 
-    </div>
+    </header>
 
 
-    {{-- =====================================================
+
+    {{-- =========================================================
          RESUMEN
-    ====================================================== --}}
+    ========================================================== --}}
 
-    <div class="inventory-summary">
+    <section class="inventory-summary">
 
-        {{-- PRODUCTOS --}}
 
-        <div class="summary-card">
+        {{-- UNIDADES DISPONIBLES --}}
 
-            <div class="summary-icon">
+        <article class="inventory-summary-card">
+
+            <div class="summary-card-icon brown">
+
                 <i class="bi bi-box-seam"></i>
+
             </div>
 
-            <div>
-                <span>Productos</span>
+            <div class="summary-card-content">
 
-                <strong>
-                    {{ $totalProductos }}
-                </strong>
-            </div>
-
-        </div>
-
-
-        {{-- STOCK TOTAL --}}
-
-        <div class="summary-card">
-
-            <div class="summary-icon blue">
-                <i class="bi bi-stack"></i>
-            </div>
-
-            <div>
-                <span>Unidades en stock</span>
+                <span>
+                    Unidades disponibles
+                </span>
 
                 <strong>
                     {{ number_format($stockTotal) }}
                 </strong>
+
+                <small>
+                    En todo el inventario
+                </small>
+
             </div>
 
-        </div>
+        </article>
+
 
 
         {{-- STOCK BAJO --}}
 
-        <div class="summary-card">
+        <article class="inventory-summary-card warning">
 
-            <div class="summary-icon warning">
+            <div class="summary-card-icon orange">
+
                 <i class="bi bi-exclamation-triangle"></i>
+
             </div>
 
-            <div>
-                <span>Stock bajo</span>
+            <div class="summary-card-content">
+
+                <span>
+                    Stock bajo
+                </span>
 
                 <strong>
                     {{ $stockBajo }}
                 </strong>
+
+                <small>
+                    Requieren revisión
+                </small>
+
             </div>
 
-        </div>
+        </article>
 
 
-        {{-- ACTIVOS --}}
 
-        <div class="summary-card">
+        {{-- SIN STOCK --}}
 
-            <div class="summary-icon success">
-                <i class="bi bi-check-circle"></i>
+        <article class="inventory-summary-card danger">
+
+            <div class="summary-card-icon red">
+
+                <i class="bi bi-x-circle"></i>
+
             </div>
 
-            <div>
-                <span>Productos activos</span>
+            <div class="summary-card-content">
+
+                <span>
+                    Sin stock
+                </span>
 
                 <strong>
-                    {{ $productosActivos }}
+                    {{ $productosSinStock }}
                 </strong>
+
+                <small>
+                    Actualmente agotados
+                </small>
+
             </div>
 
-        </div>
-
-    </div>
+        </article>
 
 
-    {{-- =====================================================
-         INVENTARIO ACTUAL
-    ====================================================== --}}
 
-    <div class="inventory-panel">
+        {{-- MOVIMIENTOS --}}
 
-        <div class="inventory-panel-header">
+        <article class="inventory-summary-card success">
+
+            <div class="summary-card-icon green">
+
+                <i class="bi bi-arrow-left-right"></i>
+
+            </div>
+
+            <div class="summary-card-content">
+
+                <span>
+                    Movimientos recientes
+                </span>
+
+                <strong>
+                    {{ $totalMovimientos }}
+                </strong>
+
+                <small>
+                    Registros disponibles
+                </small>
+
+            </div>
+
+        </article>
+
+
+    </section>
+
+
+
+    {{-- =========================================================
+         STOCK ACTUAL
+    ========================================================== --}}
+
+    <section class="inventory-panel">
+
+
+        <header class="inventory-panel-header">
 
             <div>
+
+                <span class="inventory-section-label">
+                    EXISTENCIAS
+                </span>
 
                 <h2>
                     Stock actual
                 </h2>
 
                 <p>
-                    Estado actual del inventario por producto.
+                    Consulta rápidamente cuánto tienes disponible
+                    de cada producto.
                 </p>
 
             </div>
@@ -196,10 +301,11 @@
 
             </div>
 
-        </div>
+        </header>
 
 
-        <div class="table-wrapper">
+
+        <div class="inventory-table-wrapper">
 
             <table class="inventory-table">
 
@@ -207,17 +313,29 @@
 
                     <tr>
 
-                        <th>Producto</th>
+                        <th>
+                            Producto
+                        </th>
 
-                        <th>Categoría</th>
+                        <th>
+                            Categoría
+                        </th>
 
-                        <th>Stock actual</th>
+                        <th>
+                            Disponible
+                        </th>
 
-                        <th>Stock mínimo</th>
+                        <th>
+                            Mínimo
+                        </th>
 
-                        <th>Stock seguridad</th>
+                        <th>
+                            Seguridad
+                        </th>
 
-                        <th>Estado</th>
+                        <th>
+                            Estado
+                        </th>
 
                     </tr>
 
@@ -226,9 +344,23 @@
 
                 <tbody id="inventoryTableBody">
 
+
                     @forelse($productos as $producto)
 
+
+                        @php
+
+                            $stock =
+                                (int) $producto->stock;
+
+                            $stockMinimo =
+                                (int) $producto->stock_minimo;
+
+                        @endphp
+
+
                         <tr>
+
 
                             {{-- PRODUCTO --}}
 
@@ -236,8 +368,10 @@
 
                                 <div class="inventory-product">
 
-                                    <div class="inventory-product-icon">
+                                    <div class="inventory-product-avatar">
+
                                         <i class="bi bi-box-seam"></i>
+
                                     </div>
 
                                     <div>
@@ -246,9 +380,9 @@
                                             {{ $producto->nombre }}
                                         </strong>
 
-                                        <small>
+                                        <span>
                                             {{ $producto->descripcion ?: 'Sin descripción' }}
-                                        </small>
+                                        </span>
 
                                     </div>
 
@@ -261,44 +395,62 @@
 
                             <td>
 
-                                <span class="category-badge">
+                                <span class="category-chip">
+
                                     {{ $producto->categoria?->nombre ?? 'Sin categoría' }}
+
                                 </span>
 
                             </td>
 
 
-                            {{-- STOCK ACTUAL --}}
+                            {{-- STOCK --}}
 
                             <td>
 
-                                <span
-                                    class="inventory-stock
-                                    {{ $producto->stock <= $producto->stock_minimo ? 'low' : '' }}"
-                                >
-                                    {{ $producto->stock }}
+                                <div class="
+                                    stock-value
+                                    {{ $stock <= 0
+                                        ? 'empty'
+                                        : ($stock <= $stockMinimo
+                                            ? 'low'
+                                            : 'normal'
+                                        )
+                                    }}
+                                ">
+
+                                    {{ $stock }}
+
+                                    <small>
+                                        unidades
+                                    </small>
+
+                                </div>
+
+                            </td>
+
+
+                            {{-- MÍNIMO --}}
+
+                            <td>
+
+                                <span class="table-number">
+
+                                    {{ $stockMinimo }}
+
                                 </span>
 
                             </td>
 
 
-                            {{-- STOCK MÍNIMO --}}
+                            {{-- SEGURIDAD --}}
 
                             <td>
 
-                                <span class="inventory-number">
-                                    {{ $producto->stock_minimo }}
-                                </span>
+                                <span class="table-number">
 
-                            </td>
-
-
-                            {{-- STOCK SEGURIDAD --}}
-
-                            <td>
-
-                                <span class="inventory-number">
                                     {{ $producto->stock_seguridad }}
+
                                 </span>
 
                             </td>
@@ -310,55 +462,87 @@
 
                                 @if(!$producto->activo)
 
-                                    <span class="status-badge inactive">
-                                        <span></span>
+                                    <span class="stock-status inactive">
+
+                                        <i></i>
+
                                         Inactivo
+
                                     </span>
 
-                                @elseif($producto->stock <= $producto->stock_minimo)
 
-                                    <span class="status-badge warning">
-                                        <span></span>
+                                @elseif($stock <= 0)
+
+                                    <span class="stock-status danger">
+
+                                        <i></i>
+
+                                        Sin stock
+
+                                    </span>
+
+
+                                @elseif($stock <= $stockMinimo)
+
+                                    <span class="stock-status warning">
+
+                                        <i></i>
+
                                         Stock bajo
+
                                     </span>
+
 
                                 @else
 
-                                    <span class="status-badge active">
-                                        <span></span>
+                                    <span class="stock-status success">
+
+                                        <i></i>
+
                                         Stock normal
+
                                     </span>
 
                                 @endif
 
                             </td>
 
+
                         </tr>
 
+
                     @empty
+
 
                         <tr>
 
                             <td
                                 colspan="6"
-                                class="empty-products"
+                                class="inventory-empty"
                             >
 
-                                <i class="bi bi-box-seam"></i>
+                                <div class="empty-state-icon">
+
+                                    <i class="bi bi-box-seam"></i>
+
+                                </div>
 
                                 <strong>
                                     No hay productos registrados
                                 </strong>
 
                                 <span>
-                                    Registra productos para comenzar a controlar el inventario.
+                                    Los productos aparecerán aquí cuando
+                                    sean registrados.
                                 </span>
 
                             </td>
 
                         </tr>
 
+
                     @endforelse
+
 
                 </tbody>
 
@@ -366,51 +550,80 @@
 
         </div>
 
-    </div>
+
+    </section>
 
 
-    {{-- =====================================================
-         MOVIMIENTOS RECIENTES
-    ====================================================== --}}
 
-    <div class="inventory-panel movements-panel">
+    {{-- =========================================================
+         MOVIMIENTOS
+    ========================================================== --}}
 
-        <div class="inventory-panel-header">
+    <section class="inventory-panel movements-panel">
+
+
+        <header class="inventory-panel-header movements-header">
 
             <div>
+
+                <span class="inventory-section-label">
+                    HISTORIAL
+                </span>
 
                 <h2>
                     Movimientos recientes
                 </h2>
 
                 <p>
-                    Últimos movimientos registrados en el inventario.
+                    Consulta las últimas entradas, salidas y reposiciones.
                 </p>
 
             </div>
 
-        </div>
+
+            <div class="movement-info">
+
+                <i class="bi bi-clock-history"></i>
+
+                Últimos registros
+
+            </div>
+
+        </header>
 
 
-        <div class="table-wrapper">
 
-            <table class="inventory-table movements-table">
+        <div class="inventory-table-wrapper">
+
+            <table class="inventory-table movement-table">
 
                 <thead>
 
                     <tr>
 
-                        <th>Producto</th>
+                        <th>
+                            Producto
+                        </th>
 
-                        <th>Tipo</th>
+                        <th>
+                            Movimiento
+                        </th>
 
-                        <th>Cantidad</th>
+                        <th>
+                            Cantidad
+                        </th>
 
-                        <th>Stock anterior</th>
+                        <th>
+                            Antes
+                        </th>
 
-                        <th>Stock nuevo</th>
+                        <th>
+                            Después
+                        </th>
 
-                        <th>Fecha</th>
+                        <th>
+                            Fecha
+                        </th>
 
                     </tr>
 
@@ -419,17 +632,34 @@
 
                 <tbody>
 
+
                     @forelse($movimientos as $movimiento)
 
+
                         <tr>
+
 
                             {{-- PRODUCTO --}}
 
                             <td>
 
-                                <strong>
-                                    {{ $movimiento->producto?->nombre ?? 'Producto eliminado' }}
-                                </strong>
+                                <div class="movement-product">
+
+                                    <div class="movement-product-icon">
+
+                                        <i class="bi bi-box-seam"></i>
+
+                                    </div>
+
+                                    <strong>
+
+                                        {{ $movimiento->producto?->nombre
+                                            ?? 'Producto eliminado'
+                                        }}
+
+                                    </strong>
+
+                                </div>
 
                             </td>
 
@@ -440,11 +670,15 @@
 
                                 @switch($movimiento->tipo)
 
+
                                     @case('entrada')
 
-                                        <span class="movement-badge entry">
+                                        <span class="movement-type entry">
+
                                             <i class="bi bi-arrow-down-left"></i>
+
                                             Entrada
+
                                         </span>
 
                                         @break
@@ -452,9 +686,12 @@
 
                                     @case('salida')
 
-                                        <span class="movement-badge exit">
+                                        <span class="movement-type exit">
+
                                             <i class="bi bi-arrow-up-right"></i>
+
                                             Salida
+
                                         </span>
 
                                         @break
@@ -462,9 +699,12 @@
 
                                     @case('reposicion')
 
-                                        <span class="movement-badge restock">
+                                        <span class="movement-type restock">
+
                                             <i class="bi bi-box-arrow-in-down"></i>
+
                                             Reposición
+
                                         </span>
 
                                         @break
@@ -472,9 +712,12 @@
 
                                     @case('ajuste')
 
-                                        <span class="movement-badge adjustment">
+                                        <span class="movement-type adjustment">
+
                                             <i class="bi bi-sliders"></i>
+
                                             Ajuste
+
                                         </span>
 
                                         @break
@@ -482,9 +725,12 @@
 
                                     @default
 
-                                        <span class="movement-badge adjustment">
+                                        <span class="movement-type adjustment">
+
                                             <i class="bi bi-question-circle"></i>
+
                                             {{ ucfirst($movimiento->tipo) }}
+
                                         </span>
 
                                 @endswitch
@@ -496,26 +742,36 @@
 
                             <td>
 
-                                <strong>
+                                <strong class="movement-quantity">
+
                                     {{ $movimiento->cantidad }}
+
                                 </strong>
 
                             </td>
 
 
-                            {{-- STOCK ANTERIOR --}}
+                            {{-- ANTES --}}
 
                             <td>
-                                {{ $movimiento->stock_anterior }}
+
+                                <span class="movement-stock">
+
+                                    {{ $movimiento->stock_anterior }}
+
+                                </span>
+
                             </td>
 
 
-                            {{-- STOCK NUEVO --}}
+                            {{-- DESPUÉS --}}
 
                             <td>
 
-                                <strong>
+                                <strong class="movement-stock current">
+
                                     {{ $movimiento->stock_nuevo }}
+
                                 </strong>
 
                             </td>
@@ -527,38 +783,50 @@
 
                                 <span class="movement-date">
 
-                                    {{ $movimiento->fecha?->format('d/m/Y H:i') ?? 'Sin fecha' }}
+                                    {{ $movimiento->fecha?->format('d/m/Y H:i')
+                                        ?? 'Sin fecha'
+                                    }}
 
                                 </span>
 
                             </td>
 
+
                         </tr>
 
+
                     @empty
+
 
                         <tr>
 
                             <td
                                 colspan="6"
-                                class="empty-products"
+                                class="inventory-empty"
                             >
 
-                                <i class="bi bi-clock-history"></i>
+                                <div class="empty-state-icon">
+
+                                    <i class="bi bi-clock-history"></i>
+
+                                </div>
 
                                 <strong>
                                     No hay movimientos registrados
                                 </strong>
 
                                 <span>
-                                    Los movimientos de inventario aparecerán aquí.
+                                    Los movimientos aparecerán aquí
+                                    cuando registres una operación.
                                 </span>
 
                             </td>
 
                         </tr>
 
+
                     @endforelse
+
 
                 </tbody>
 
@@ -566,14 +834,18 @@
 
         </div>
 
-    </div>
 
-</div>
+    </section>
 
 
-{{-- =====================================================
-     MODAL REGISTRAR MOVIMIENTO
-====================================================== --}}
+
+</main>
+
+
+
+{{-- =========================================================
+     MODAL
+========================================================= --}}
 
 <div
     id="movementModal"
@@ -581,18 +853,20 @@
     onclick="cerrarModalExterior(event)"
 >
 
+
     <div
         class="movement-modal"
         onclick="event.stopPropagation()"
     >
 
+
         {{-- CABECERA --}}
 
-        <div class="movement-modal-header">
+        <header class="movement-modal-header">
 
             <div>
 
-                <span class="page-kicker">
+                <span class="inventory-section-label">
                     INVENTARIO
                 </span>
 
@@ -601,10 +875,11 @@
                 </h2>
 
                 <p>
-                    Actualiza el stock de un producto.
+                    Actualiza las existencias de un producto.
                 </p>
 
             </div>
+
 
             <button
                 type="button"
@@ -612,10 +887,13 @@
                 onclick="cerrarMovimiento()"
                 aria-label="Cerrar"
             >
+
                 <i class="bi bi-x-lg"></i>
+
             </button>
 
-        </div>
+        </header>
+
 
 
         {{-- FORMULARIO --}}
@@ -651,10 +929,15 @@
 
                         <option
                             value="{{ $producto->id }}"
-                            {{ old('producto_id') == $producto->id ? 'selected' : '' }}
+                            {{ old('producto_id') == $producto->id
+                                ? 'selected'
+                                : ''
+                            }}
                         >
+
                             {{ $producto->nombre }}
-                            — Stock actual: {{ $producto->stock }}
+                            — {{ $producto->stock }} disponibles
+
                         </option>
 
                     @endforeach
@@ -662,6 +945,7 @@
                 </select>
 
             </div>
+
 
 
             {{-- TIPO --}}
@@ -684,28 +968,40 @@
 
                     <option
                         value="entrada"
-                        {{ old('tipo') === 'entrada' ? 'selected' : '' }}
+                        {{ old('tipo') === 'entrada'
+                            ? 'selected'
+                            : ''
+                        }}
                     >
                         Entrada
                     </option>
 
                     <option
                         value="salida"
-                        {{ old('tipo') === 'salida' ? 'selected' : '' }}
+                        {{ old('tipo') === 'salida'
+                            ? 'selected'
+                            : ''
+                        }}
                     >
                         Salida
                     </option>
 
                     <option
                         value="reposicion"
-                        {{ old('tipo') === 'reposicion' ? 'selected' : '' }}
+                        {{ old('tipo') === 'reposicion'
+                            ? 'selected'
+                            : ''
+                        }}
                     >
                         Reposición
                     </option>
 
                     <option
                         value="ajuste"
-                        {{ old('tipo') === 'ajuste' ? 'selected' : '' }}
+                        {{ old('tipo') === 'ajuste'
+                            ? 'selected'
+                            : ''
+                        }}
                     >
                         Ajuste
                     </option>
@@ -713,10 +1009,11 @@
                 </select>
 
                 <small id="movementHelp">
-                    Selecciona el tipo de movimiento.
+                    Selecciona qué deseas registrar.
                 </small>
 
             </div>
+
 
 
             {{-- CANTIDAD --}}
@@ -740,13 +1037,19 @@
             </div>
 
 
+
             {{-- MOTIVO --}}
 
             <div class="form-group">
 
                 <label for="motivo">
+
                     Motivo
-                    <span>(opcional)</span>
+
+                    <span>
+                        opcional
+                    </span>
+
                 </label>
 
                 <textarea
@@ -760,38 +1063,46 @@
             </div>
 
 
-            {{-- BOTONES --}}
+
+            {{-- ACCIONES --}}
 
             <div class="movement-form-actions">
 
                 <button
                     type="button"
-                    class="btn-secondary"
+                    class="modal-button secondary"
                     onclick="cerrarMovimiento()"
                 >
                     Cancelar
                 </button>
 
+
                 <button
                     type="submit"
-                    class="btn-primary"
+                    class="modal-button primary"
                 >
+
                     <i class="bi bi-check-lg"></i>
+
                     Registrar movimiento
+
                 </button>
 
             </div>
 
+
         </form>
+
 
     </div>
 
 </div>
 
 
-{{-- =====================================================
+
+{{-- =========================================================
      JAVASCRIPT
-====================================================== --}}
+========================================================= --}}
 
 @push('scripts')
 
@@ -799,9 +1110,10 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
+
     /*
     |--------------------------------------------------------------------------
-    | BÚSQUEDA DE PRODUCTOS
+    | BUSCADOR
     |--------------------------------------------------------------------------
     */
 
@@ -841,7 +1153,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /*
     |--------------------------------------------------------------------------
-    | TIPO DE MOVIMIENTO
+    | AYUDA DEL TIPO DE MOVIMIENTO
     |--------------------------------------------------------------------------
     */
 
@@ -861,7 +1173,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 case 'entrada':
 
                     movementHelp.textContent =
-                        'La cantidad se sumará al stock actual.';
+                        'Las unidades se sumarán al stock actual.';
 
                     break;
 
@@ -869,7 +1181,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 case 'salida':
 
                     movementHelp.textContent =
-                        'La cantidad se descontará del stock actual.';
+                        'Las unidades se descontarán del stock actual.';
 
                     break;
 
@@ -877,7 +1189,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 case 'reposicion':
 
                     movementHelp.textContent =
-                        'La cantidad se sumará al stock como reposición.';
+                        'Las unidades se registrarán como reposición.';
 
                     break;
 
@@ -885,7 +1197,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 case 'ajuste':
 
                     movementHelp.textContent =
-                        'La cantidad indicada reemplazará el stock actual.';
+                        'Utiliza este movimiento para corregir el stock.';
 
                     break;
 
@@ -893,7 +1205,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 default:
 
                     movementHelp.textContent =
-                        'Selecciona el tipo de movimiento.';
+                        'Selecciona qué deseas registrar.';
 
             }
 
@@ -904,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /*
     |--------------------------------------------------------------------------
-    | ESC PARA CERRAR MODAL
+    | ESC
     |--------------------------------------------------------------------------
     */
 
@@ -921,7 +1233,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /*
     |--------------------------------------------------------------------------
-    | ABRIR AUTOMÁTICAMENTE SI HUBO ERRORES
+    | ABRIR MODAL SI HAY ERRORES
     |--------------------------------------------------------------------------
     */
 
@@ -936,7 +1248,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 /*
 |--------------------------------------------------------------------------
-| ABRIR MODAL
+| ABRIR
 |--------------------------------------------------------------------------
 */
 
@@ -958,7 +1270,7 @@ function abrirMovimiento() {
 
 /*
 |--------------------------------------------------------------------------
-| CERRAR MODAL
+| CERRAR
 |--------------------------------------------------------------------------
 */
 
@@ -980,7 +1292,7 @@ function cerrarMovimiento() {
 
 /*
 |--------------------------------------------------------------------------
-| CERRAR AL HACER CLICK FUERA
+| CLICK EXTERIOR
 |--------------------------------------------------------------------------
 */
 

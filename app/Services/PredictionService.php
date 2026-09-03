@@ -17,7 +17,13 @@ class PredictionService
     {
         return $this->ejecutarPython($datos, 'prediccion_');
     }
-
+    public function predecirMensualMultiple(array $datos): array
+    {
+        return $this->ejecutarPython(
+            $datos,
+            'predicciones_mensuales_'
+        );
+    }
 
     /**
      * ============================================================

@@ -13,21 +13,16 @@ class DashboardController extends Controller
 
     public function index()
     {
-        /*
-        |--------------------------------------------------------------------------
-        | RESUMEN DE REPOSICIÓN
-        |--------------------------------------------------------------------------
-        | Obtenemos los datos reales generados por el sistema
-        | de predicción.
-        |--------------------------------------------------------------------------
-        */
-
         $resumenReposicion =
             $this->demandaService->obtenerResumenReposicion();
 
+        $dashboard = [
+            'resumenReposicion' => $resumenReposicion,
+        ];
+
         return view(
             'dashboard.index',
-            compact('resumenReposicion')
+            compact('dashboard')
         );
     }
 }

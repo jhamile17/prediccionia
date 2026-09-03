@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Análisis de demanda | PrediccionIA')
+@section('title', 'Análisis de ventas | PrediccionIA')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/analisis.css') }}">
@@ -8,39 +8,124 @@
 
 @section('content')
 
-<div class="analysis-page">
+@php
 
-    {{-- =====================================================
-         HEADER
-    ====================================================== --}}
+    /*
+    |--------------------------------------------------------------------------
+    | DATOS
+    |--------------------------------------------------------------------------
+    */
 
-    <div class="page-header">
+    $demandaPromedio =
+        (float) ($demandaPromedio ?? 0);
 
-        <div>
+    $demandaTotal =
+        (int) ($demandaTotal ?? 0);
 
-            <div class="page-kicker">
-                INTELIGENCIA ARTIFICIAL
-            </div>
+    $fechaMayorDemanda =
+        $fechaMayorDemanda ?? null;
+
+    $cantidadMayorDemanda =
+        (int) ($cantidadMayorDemanda ?? 0);
+
+    $tendencia =
+        $tendencia ?? 'Estable';
+
+    $tendenciaPorcentaje =
+        (float) ($tendenciaPorcentaje ?? 0);
+
+    $datosGrafico =
+        is_iterable($datosGrafico ?? null)
+            ? collect($datosGrafico)->values()->all()
+            : [];
+
+    $principalesDias =
+        is_iterable($principalesDias ?? null)
+            ? collect($principalesDias)->values()->all()
+            : [];
+
+    /*
+    |--------------------------------------------------------------------------
+    | PRODUCTO
+    |--------------------------------------------------------------------------
+    */
+
+    $nombreProducto =
+        $productoSeleccionado?->nombre
+        ?? 'Todos los productos';
+
+@endphp
+
+
+<main class="analysis-page">
+
+
+    {{-- =========================================================
+         ENCABEZADO
+    ========================================================== --}}
+
+    <header class="analysis-hero">
+
+        <div class="analysis-hero-content">
+
+            <span class="analysis-eyebrow">
+                ANÁLISIS DE VENTAS
+            </span>
 
             <h1>
-                Análisis de demanda
+                ¿Cómo se están comportando tus ventas?
             </h1>
 
             <p>
-                Analiza el comportamiento histórico de la demanda
-                y visualiza sus principales tendencias.
+                Explora el comportamiento histórico de tus productos
+                para identificar cambios y patrones de demanda.
             </p>
 
         </div>
 
-    </div>
+
+        <div class="analysis-context">
+
+            <span>
+                PRODUCTO ANALIZADO
+            </span>
+
+            <strong>
+                {{ $nombreProducto }}
+            </strong>
+
+            <small>
+                {{ $nombrePeriodo ?? 'Período seleccionado' }}
+            </small>
+
+        </div>
+
+    </header>
 
 
-    {{-- =====================================================
+
+    {{-- =========================================================
          FILTROS
-    ====================================================== --}}
+    ========================================================== --}}
 
-    <div class="analysis-filters">
+    <section class="analysis-filter-card">
+
+        <div class="analysis-filter-heading">
+
+            <div>
+
+                <span class="analysis-section-label">
+                    CONSULTAR
+                </span>
+
+                <h2>
+                    Selecciona qué quieres analizar
+                </h2>
+
+            </div>
+
+        </div>
+
 
         <form
             action="{{ route('analisis.index') }}"
@@ -48,7 +133,7 @@
             class="analysis-filter-form"
         >
 
-            <div class="filter-group">
+            <div class="analysis-filter-group">
 
                 <label for="producto_id">
                     Producto
@@ -67,7 +152,10 @@
 
                         <option
                             value="{{ $producto->id }}"
-                            {{ (string) $productoId === (string) $producto->id ? 'selected' : '' }}
+                            {{ (string) $productoId === (string) $producto->id
+                                ? 'selected'
+                                : ''
+                            }}
                         >
                             {{ $producto->nombre }}
                         </option>
@@ -79,7 +167,7 @@
             </div>
 
 
-            <div class="filter-group">
+            <div class="analysis-filter-group">
 
                 <label for="periodo">
                     Período
@@ -125,10 +213,10 @@
 
             <button
                 type="submit"
-                class="btn btn-primary"
+                class="analysis-consult-button"
             >
 
-                <i class="bi bi-search"></i>
+                <i class="bi bi-bar-chart-line"></i>
 
                 Analizar
 
@@ -136,20 +224,22 @@
 
         </form>
 
-    </div>
+    </section>
 
 
-    {{-- =====================================================
+
+    {{-- =========================================================
          RESUMEN
-    ====================================================== --}}
+    ========================================================== --}}
 
-    <div class="analysis-summary">
+    <section class="analysis-kpis">
 
 
-        {{-- DEMANDA PROMEDIO --}}
-        <div class="analysis-summary-card">
+        {{-- PROMEDIO --}}
 
-            <div class="analysis-summary-icon blue">
+        <article class="analysis-kpi">
+
+            <div class="analysis-kpi-icon blue">
 
                 <i class="bi bi-graph-up"></i>
 
@@ -162,7 +252,7 @@
                 </span>
 
                 <strong>
-                    {{ number_format($demandaPromedio, 2) }}
+                    {{ number_format($demandaPromedio, 1) }}
                 </strong>
 
                 <small>
@@ -171,13 +261,15 @@
 
             </div>
 
-        </div>
+        </article>
 
 
-        {{-- DEMANDA TOTAL --}}
-        <div class="analysis-summary-card">
 
-            <div class="analysis-summary-icon purple">
+        {{-- TOTAL --}}
+
+        <article class="analysis-kpi">
+
+            <div class="analysis-kpi-icon purple">
 
                 <i class="bi bi-bar-chart"></i>
 
@@ -186,7 +278,7 @@
             <div>
 
                 <span>
-                    Demanda total
+                    Unidades vendidas
                 </span>
 
                 <strong>
@@ -194,58 +286,63 @@
                 </strong>
 
                 <small>
-                    unidades analizadas
+                    durante el período
                 </small>
 
             </div>
 
-        </div>
+        </article>
 
 
-        {{-- MAYOR DEMANDA --}}
-        <div class="analysis-summary-card">
 
-            <div class="analysis-summary-icon orange">
+        {{-- MAYOR DÍA --}}
 
-                <i class="bi bi-arrow-up-right"></i>
+        <article class="analysis-kpi">
+
+            <div class="analysis-kpi-icon orange">
+
+                <i class="bi bi-calendar2-week"></i>
 
             </div>
 
             <div>
 
                 <span>
-                    Día de mayor demanda
+                    Día con mayor movimiento
                 </span>
 
-                <strong>
+                <strong class="analysis-kpi-date">
 
-                    @if($fechaMayorDemanda)
-                        {{ $fechaMayorDemanda }}
-                    @else
-                        --
-                    @endif
+                    {{ $fechaMayorDemanda ?: '—' }}
 
                 </strong>
 
                 <small>
 
                     @if($cantidadMayorDemanda > 0)
-                        {{ $cantidadMayorDemanda }} unidades
+
+                        {{ number_format($cantidadMayorDemanda) }}
+                        unidades vendidas
+
                     @else
+
                         Sin ventas registradas
+
                     @endif
 
                 </small>
 
             </div>
 
-        </div>
+        </article>
+
 
 
         {{-- TENDENCIA --}}
-        <div class="analysis-summary-card">
 
-            <div class="analysis-summary-icon green">
+        <article class="analysis-kpi">
+
+            <div class="analysis-kpi-icon green">
 
                 <i class="bi bi-activity"></i>
 
@@ -257,118 +354,182 @@
                     Tendencia
                 </span>
 
-                <strong>
+                <strong
+                    class="
+                        {{ $tendenciaPorcentaje > 5
+                            ? 'trend-up'
+                            : ($tendenciaPorcentaje < -5
+                                ? 'trend-down'
+                                : 'trend-stable'
+                            )
+                        }}
+                    "
+                >
                     {{ $tendencia }}
                 </strong>
 
                 <small>
 
                     @if($tendenciaPorcentaje > 0)
+
                         +{{ number_format($tendenciaPorcentaje, 1) }}%
+
                     @elseif($tendenciaPorcentaje < 0)
+
                         {{ number_format($tendenciaPorcentaje, 1) }}%
+
                     @else
+
                         0%
+
                     @endif
 
-                    respecto al inicio del período
+                    respecto al inicio
 
                 </small>
 
             </div>
 
-        </div>
-
-    </div>
+        </article>
 
 
-    {{-- =====================================================
-         GRÁFICO
-    ====================================================== --}}
+    </section>
 
-    <div class="analysis-section">
 
-        <div class="section-header">
+
+    {{-- =========================================================
+         GRÁFICO PRINCIPAL
+    ========================================================== --}}
+
+    <section class="analysis-panel">
+
+        <header class="analysis-panel-header">
 
             <div>
 
+                <span class="analysis-section-label">
+                    COMPORTAMIENTO
+                </span>
+
                 <h2>
-                    Comportamiento de la demanda
+                    Evolución de las ventas
                 </h2>
 
                 <p>
 
                     {{ $productoSeleccionado
-                        ? 'Evolución de ' . $productoSeleccionado->nombre
-                        : 'Evolución de todos los productos'
+                        ? 'Así ha variado la demanda de ' .
+                          $productoSeleccionado->nombre .
+                          ' durante el período seleccionado.'
+                        : 'Así ha variado la demanda de todos los productos.'
                     }}
-
-                    durante {{ $nombrePeriodo }}.
 
                 </p>
 
             </div>
 
-            <div class="analysis-badge">
 
-                <i class="bi bi-bar-chart-line"></i>
+            <div class="analysis-data-badge">
 
-                Datos reales
+                <i class="bi bi-database-check"></i>
+
+                Datos registrados
 
             </div>
 
-        </div>
+        </header>
 
 
-        <div class="chart-container">
+        @if(count($datosGrafico) > 0)
 
-            <canvas id="demandaChart"></canvas>
+            <div class="analysis-chart">
 
-        </div>
+                <canvas id="demandaChart"></canvas>
 
-    </div>
+            </div>
+
+        @else
+
+            <div class="analysis-empty">
+
+                <div class="analysis-empty-icon">
+
+                    <i class="bi bi-bar-chart"></i>
+
+                </div>
+
+                <h3>
+                    Aún no hay ventas para mostrar
+                </h3>
+
+                <p>
+                    Selecciona otro período o producto para consultar
+                    el comportamiento de las ventas.
+                </p>
+
+            </div>
+
+        @endif
+
+    </section>
 
 
-    {{-- =====================================================
-         TENDENCIAS
-    ====================================================== --}}
 
-    <div class="analysis-bottom-grid">
+    {{-- =========================================================
+         PARTE INFERIOR
+    ========================================================== --}}
+
+    <section class="analysis-grid">
 
 
-        {{-- PRINCIPALES DÍAS --}}
-        <div class="analysis-section">
+        {{-- =====================================================
+             DÍAS PRINCIPALES
+        ====================================================== --}}
 
-            <div class="section-header">
+        <article class="analysis-panel">
+
+            <header class="analysis-panel-header">
 
                 <div>
 
+                    <span class="analysis-section-label">
+                        MAYOR MOVIMIENTO
+                    </span>
+
                     <h2>
-                        Principales días
+                        Días con más ventas
                     </h2>
 
                     <p>
-                        Días con mayor demanda durante el período.
+                        Los días en los que se registró mayor movimiento.
                     </p>
 
                 </div>
 
-            </div>
+            </header>
 
 
             @if(count($principalesDias) > 0)
 
-                <div class="trend-list">
+                <div class="analysis-days">
 
                     @foreach($principalesDias as $indice => $dia)
 
-                        <div class="trend-item">
+                        <div class="analysis-day">
 
-                            <div class="trend-position">
-                                {{ $indice + 1 }}
+                            <div class="analysis-day-number">
+
+                                {{ str_pad(
+                                    $indice + 1,
+                                    2,
+                                    '0',
+                                    STR_PAD_LEFT
+                                ) }}
+
                             </div>
 
-                            <div class="trend-info">
+
+                            <div class="analysis-day-info">
 
                                 <strong>
                                     {{ $dia['fecha'] }}
@@ -380,13 +541,16 @@
 
                             </div>
 
-                            <div class="trend-value">
 
-                                {{ number_format($dia['cantidad']) }}
+                            <div class="analysis-day-value">
 
-                                <small>
+                                <strong>
+                                    {{ number_format($dia['cantidad']) }}
+                                </strong>
+
+                                <span>
                                     unidades
-                                </small>
+                                </span>
 
                             </div>
 
@@ -398,51 +562,61 @@
 
             @else
 
-                <div class="analysis-empty">
+                <div class="analysis-empty compact">
 
-                    <i class="bi bi-bar-chart"></i>
+                    <i class="bi bi-calendar-x"></i>
 
                     <h3>
-                        No hay datos
+                        Sin datos
                     </h3>
 
                     <p>
-                        No se encontraron ventas completadas
-                        durante el período seleccionado.
+                        No hay ventas completadas durante este período.
                     </p>
 
                 </div>
 
             @endif
 
-        </div>
+        </article>
 
 
-        {{-- INTERPRETACIÓN --}}
-        <div class="analysis-section">
 
-            <div class="section-header">
+        {{-- =====================================================
+             INTERPRETACIÓN
+        ====================================================== --}}
+
+        <article class="analysis-panel">
+
+            <header class="analysis-panel-header">
 
                 <div>
 
+                    <span class="analysis-section-label">
+                        RESUMEN
+                    </span>
+
                     <h2>
-                        Interpretación
+                        ¿Qué está pasando?
                     </h2>
 
                     <p>
-                        Resumen del comportamiento detectado.
+                        Una lectura sencilla de los datos registrados.
                     </p>
 
                 </div>
 
-            </div>
+            </header>
 
 
             <div class="analysis-insights">
 
-                <div class="insight-item">
 
-                    <div class="insight-icon">
+                {{-- PROMEDIO --}}
+
+                <div class="analysis-insight">
+
+                    <div class="analysis-insight-icon">
 
                         <i class="bi bi-speedometer2"></i>
 
@@ -451,18 +625,18 @@
                     <div>
 
                         <strong>
-                            Demanda promedio
+                            Ritmo de ventas
                         </strong>
 
                         <p>
 
-                            Se registró un promedio de
+                            En promedio se venden
 
                             <b>
-                                {{ number_format($demandaPromedio, 2) }}
+                                {{ number_format($demandaPromedio, 1) }}
                             </b>
 
-                            unidades vendidas por día.
+                            unidades por día.
 
                         </p>
 
@@ -471,9 +645,12 @@
                 </div>
 
 
-                <div class="insight-item">
 
-                    <div class="insight-icon">
+                {{-- TENDENCIA --}}
+
+                <div class="analysis-insight">
+
+                    <div class="analysis-insight-icon">
 
                         <i class="bi bi-activity"></i>
 
@@ -482,28 +659,28 @@
                     <div>
 
                         <strong>
-                            Tendencia {{ strtolower($tendencia) }}
+                            Evolución
                         </strong>
 
                         <p>
 
                             @if($tendenciaPorcentaje > 5)
 
-                                La demanda presenta un
-                                <b>incremento del {{ number_format($tendenciaPorcentaje, 1) }}%</b>
-                                entre la primera y segunda mitad del período analizado.
+                                Las ventas muestran un
+                                <b>incremento</b>
+                                durante la segunda mitad del período.
 
                             @elseif($tendenciaPorcentaje < -5)
 
-                                La demanda presenta una
-                                <b>disminución del {{ number_format(abs($tendenciaPorcentaje), 1) }}%</b>
-                                entre la primera y segunda mitad del período analizado.
+                                Las ventas muestran una
+                                <b>disminución</b>
+                                durante la segunda mitad del período.
 
                             @else
 
-                                La demanda se mantiene
-                                <b>relativamente estable</b>
-                                entre la primera y segunda mitad del período analizado.
+                                Las ventas se mantienen
+                                <b>relativamente estables</b>
+                                durante el período analizado.
 
                             @endif
 
@@ -514,9 +691,12 @@
                 </div>
 
 
-                <div class="insight-item">
 
-                    <div class="insight-icon">
+                {{-- MAYOR ACTIVIDAD --}}
+
+                <div class="analysis-insight">
+
+                    <div class="analysis-insight-icon">
 
                         <i class="bi bi-calendar-event"></i>
 
@@ -525,32 +705,31 @@
                     <div>
 
                         <strong>
-                            Mayor actividad
+                            Mayor movimiento
                         </strong>
 
                         <p>
 
                             @if($fechaMayorDemanda)
 
-                                El mayor nivel de demanda se registró
-                                el
+                                El día
 
                                 <b>
                                     {{ $fechaMayorDemanda }}
                                 </b>
 
-                                con
+                                se registraron
 
                                 <b>
-                                    {{ $cantidadMayorDemanda }}
+                                    {{ number_format($cantidadMayorDemanda) }}
                                 </b>
 
-                                unidades.
+                                unidades vendidas.
 
                             @else
 
-                                No existen ventas registradas
-                                para este período.
+                                No hay suficiente información
+                                para identificar un día de mayor movimiento.
 
                             @endif
 
@@ -560,13 +739,36 @@
 
                 </div>
 
+
             </div>
 
-        </div>
+        </article>
+
+
+    </section>
+
+
+
+    {{-- =========================================================
+         NOTA
+    ========================================================== --}}
+
+    <div class="analysis-note">
+
+        <i class="bi bi-lightbulb"></i>
+
+        <p>
+
+            Usa este análisis para conocer el comportamiento
+            de tus ventas. La información mostrada corresponde
+            a las ventas registradas en el período seleccionado.
+
+        </p>
 
     </div>
 
-</div>
+
+</main>
 
 @endsection
 
@@ -581,129 +783,110 @@
 
 <script>
 
-    const datosDemanda = @json($datosGrafico);
+document.addEventListener('DOMContentLoaded', function () {
 
-    const etiquetas = datosDemanda.map(item => {
-
-        const fecha = new Date(
-            item.fecha + 'T00:00:00'
-        );
-
-        return fecha.toLocaleDateString(
-            'es-PE',
-            {
-                day: '2-digit',
-                month: 'short'
-            }
-        );
-
-    });
-
-
-    const valores = datosDemanda.map(
-        item => item.cantidad
-    );
-
+    const datosDemanda =
+        @json($datosGrafico);
 
     const canvas =
         document.getElementById('demandaChart');
 
 
-    if (canvas) {
+    if (!canvas || !datosDemanda.length) {
+        return;
+    }
 
-        new Chart(canvas, {
 
-            type: 'line',
+    const etiquetas =
+        datosDemanda.map(function (item) {
 
-            data: {
+            const fecha =
+                new Date(
+                    item.fecha + 'T00:00:00'
+                );
 
-                labels: etiquetas,
+            return fecha.toLocaleDateString(
+                'es-PE',
+                {
+                    day: '2-digit',
+                    month: 'short'
+                }
+            );
 
-                datasets: [
+        });
 
-                    {
 
-                        label: 'Demanda',
+    const valores =
+        datosDemanda.map(function (item) {
 
-                        data: valores,
+            return Number(item.cantidad) || 0;
 
-                        borderWidth: 2,
+        });
 
-                        pointRadius: 3,
 
-                        pointHoverRadius: 5,
+    new Chart(canvas, {
 
-                        tension: 0.35,
+        type: 'line',
 
-                        fill: true
+        data: {
 
-                    }
+            labels: etiquetas,
 
-                ]
+            datasets: [
+
+                {
+
+                    label: 'Ventas',
+
+                    data: valores,
+
+                    borderWidth: 3,
+
+                    pointRadius: 3,
+
+                    pointHoverRadius: 5,
+
+                    tension: 0.35,
+
+                    fill: true
+
+                }
+
+            ]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            interaction: {
+
+                intersect: false,
+
+                mode: 'index'
 
             },
 
-            options: {
+            plugins: {
 
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                interaction: {
-
-                    intersect: false,
-
-                    mode: 'index'
-
+                legend: {
+                    display: false
                 },
 
-                plugins: {
+                tooltip: {
 
-                    legend: {
+                    callbacks: {
 
-                        display: false
+                        label: function (context) {
 
-                    },
-
-                    tooltip: {
-
-                        callbacks: {
-
-                            label: function(context) {
-
-                                return (
-                                    ' Demanda: ' +
-                                    context.parsed.y +
-                                    ' unidades'
-                                );
-
-                            }
-
-                        }
-
-                    }
-
-                },
-
-                scales: {
-
-                    y: {
-
-                        beginAtZero: true,
-
-                        ticks: {
-
-                            precision: 0
-
-                        }
-
-                    },
-
-                    x: {
-
-                        ticks: {
-
-                            maxTicksLimit: 12
+                            return (
+                                ' ' +
+                                context.parsed.y +
+                                ' unidades vendidas'
+                            );
 
                         }
 
@@ -711,11 +894,47 @@
 
                 }
 
+            },
+
+            scales: {
+
+                y: {
+
+                    beginAtZero: true,
+
+                    ticks: {
+
+                        precision: 0
+
+                    },
+
+                    grid: {
+                        drawBorder: false
+                    }
+
+                },
+
+                x: {
+
+                    ticks: {
+
+                        maxTicksLimit: 12
+
+                    },
+
+                    grid: {
+                        display: false
+                    }
+
+                }
+
             }
 
-        });
+        }
 
-    }
+    });
+
+});
 
 </script>
 

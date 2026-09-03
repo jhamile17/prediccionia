@@ -1,9 +1,124 @@
 /* =========================================================
-   PÁGINA ANÁLISIS DE DEMANDA
+   ANÁLISIS DE VENTAS PROCÁFES
 ========================================================= */
 
 .analysis-page {
-    width: 100%;
+    width: min(1200px, calc(100% - 48px));
+
+    margin: 0 auto;
+
+    padding: 30px 0 45px;
+
+    color: #352a26;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.analysis-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 25px;
+
+    margin-bottom: 23px;
+}
+
+.analysis-eyebrow,
+.analysis-section-label {
+    display: block;
+
+    color: #947d72;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 1px;
+}
+
+.analysis-eyebrow {
+    margin-bottom: 8px;
+}
+
+.analysis-hero h1 {
+    margin: 0;
+
+    color: #32231e;
+
+    font-size: 29px;
+
+    font-weight: 750;
+
+    line-height: 1.2;
+}
+
+.analysis-hero p {
+    max-width: 690px;
+
+    margin: 8px 0 0;
+
+    color: #81746e;
+
+    font-size: 12px;
+
+    line-height: 1.6;
+}
+
+.analysis-context {
+    flex-shrink: 0;
+
+    min-width: 175px;
+
+    padding: 11px 14px;
+
+    background: #ffffff;
+
+    border: 1px solid #ebe5e1;
+
+    border-radius: 11px;
+
+    box-shadow:
+        0 4px 15px rgba(62, 39, 35, .04);
+}
+
+.analysis-context span {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #9b8e87;
+
+    font-size: 8px;
+
+    font-weight: 750;
+}
+
+.analysis-context strong {
+    display: block;
+
+    overflow: hidden;
+
+    color: #4f3e36;
+
+    font-size: 11px;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+.analysis-context small {
+    display: block;
+
+    margin-top: 3px;
+
+    color: #a09690;
+
+    font-size: 8px;
 }
 
 
@@ -11,163 +126,170 @@
    FILTROS
 ========================================================= */
 
-.analysis-filters {
+.analysis-filter-card {
+    padding: 18px 20px;
+
+    margin-bottom: 16px;
+
     background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    padding: 22px 20px;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+
+    border: 1px solid #ebe5e1;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 4px 15px rgba(62, 39, 35, .04);
+}
+
+.analysis-filter-heading {
+    margin-bottom: 12px;
+}
+
+.analysis-filter-heading h2 {
+    margin: 5px 0 0;
+
+    color: #3c2d27;
+
+    font-size: 14px;
+
+    font-weight: 750;
 }
 
 .analysis-filter-form {
     display: flex;
+
     align-items: flex-end;
-    gap: 16px;
-    flex-wrap: wrap;
+
+    gap: 12px;
 }
 
-.filter-group {
+.analysis-filter-group {
     display: flex;
+
     flex-direction: column;
-    gap: 7px;
-    min-width: 210px;
+
+    gap: 5px;
+
+    min-width: 190px;
 }
 
-.filter-group label {
-    color: #334155;
-    font-size: 13px;
-    font-weight: 600;
+.analysis-filter-group label {
+    color: #6f625c;
+
+    font-size: 9px;
+
+    font-weight: 700;
 }
 
-.filter-group select {
-    width: 100%;
-    height: 42px;
+.analysis-filter-group select {
+    height: 36px;
 
-    padding: 0 13px;
+    padding: 0 10px;
 
-    border: 1px solid #dbe1ea;
-    border-radius: 9px;
+    border: 1px solid #e7e0dc;
 
-    background: #ffffff;
-    color: #1e293b;
-
-    font-family: inherit;
-    font-size: 14px;
+    border-radius: 8px;
 
     outline: none;
 
-    cursor: pointer;
+    background: #fcfaf9;
 
-    transition: 0.2s ease;
-}
-
-.filter-group select:hover {
-    border-color: #c7d2fe;
-}
-
-.filter-group select:focus {
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.10);
-}
-
-
-/* =========================================================
-   BOTÓN ANALIZAR
-========================================================= */
-
-.analysis-filter-form .btn-primary {
-    height: 42px;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-
-    padding: 0 18px;
-
-    border: none;
-    border-radius: 9px;
-
-    background: #4f46e5;
-    color: #ffffff;
+    color: #4b3b35;
 
     font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
+
+    font-size: 9px;
 
     cursor: pointer;
-
-    box-shadow: 0 5px 12px rgba(79, 70, 229, 0.20);
-
-    transition: 0.2s ease;
 }
 
-.analysis-filter-form .btn-primary:hover {
-    background: #4338ca;
-    transform: translateY(-1px);
-}
-
-.analysis-filter-form .btn-primary:active {
-    transform: translateY(0);
-}
-
-
-/* =========================================================
-   RESUMEN
-========================================================= */
-
-.analysis-summary {
-    display: grid;
-
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-
-    gap: 18px;
-
-    margin-bottom: 24px;
-}
-
-
-/* =========================================================
-   TARJETA DE RESUMEN
-========================================================= */
-
-.analysis-summary-card {
-    min-width: 0;
-    min-height: 96px;
-
-    display: flex;
-    align-items: center;
-
-    gap: 14px;
-
-    padding: 18px;
+.analysis-filter-group select:focus {
+    border-color: #9d8579;
 
     background: #ffffff;
 
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
-
-    transition: 0.2s ease;
+    box-shadow:
+        0 0 0 3px rgba(125, 98, 85, .08);
 }
 
-.analysis-summary-card:hover {
-    transform: translateY(-2px);
+.analysis-consult-button {
+    height: 36px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 6px;
+
+    padding: 0 15px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: #47362f;
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 9px;
+
+    font-weight: 750;
+
+    cursor: pointer;
+
+    transition:
+        transform .15s ease,
+        box-shadow .15s ease;
+}
+
+.analysis-consult-button:hover {
+    transform: translateY(-1px);
 
     box-shadow:
-        0 8px 20px rgba(15, 23, 42, 0.07);
+        0 5px 14px rgba(62, 39, 35, .15);
 }
 
 
 /* =========================================================
-   ICONO DEL RESUMEN
+   KPIs
 ========================================================= */
 
-.analysis-summary-icon {
-    width: 46px;
-    height: 46px;
+.analysis-kpis {
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 13px;
+
+    margin-bottom: 16px;
+}
+
+.analysis-kpi {
+    display: flex;
+
+    align-items: center;
+
+    min-height: 103px;
+
+    padding: 17px;
+
+    background: #ffffff;
+
+    border: 1px solid #ebe5e1;
+
+    border-radius: 13px;
+
+    box-shadow:
+        0 4px 15px rgba(62, 39, 35, .04);
+}
+
+.analysis-kpi-icon {
+    width: 39px;
+    height: 39px;
 
     flex-shrink: 0;
 
@@ -175,165 +297,165 @@
     align-items: center;
     justify-content: center;
 
-    border-radius: 12px;
+    margin-right: 11px;
 
-    font-size: 20px;
+    border-radius: 10px;
+
+    font-size: 15px;
 }
 
-
-/* Colores */
-
-.analysis-summary-icon.blue {
-    background: #eef2ff;
-    color: #4f46e5;
+.analysis-kpi-icon.blue {
+    background: #f0f2ff;
+    color: #6d62bd;
 }
 
-.analysis-summary-icon.purple {
-    background: #f3e8ff;
-    color: #9333ea;
+.analysis-kpi-icon.purple {
+    background: #f4efff;
+    color: #8667bb;
 }
 
-.analysis-summary-icon.orange {
-    background: #fff7ed;
-    color: #ea580c;
+.analysis-kpi-icon.orange {
+    background: #fff4e8;
+    color: #d17a27;
 }
 
-.analysis-summary-icon.green {
-    background: #ecfdf5;
-    color: #059669;
+.analysis-kpi-icon.green {
+    background: #edf8f1;
+    color: #38945d;
 }
 
-
-/* =========================================================
-   TEXTO DEL RESUMEN
-========================================================= */
-
-.analysis-summary-card > div:last-child {
+.analysis-kpi > div:last-child {
     min-width: 0;
 }
 
-.analysis-summary-card span {
+.analysis-kpi span {
     display: block;
 
-    margin-bottom: 4px;
+    color: #81756f;
 
-    color: #64748b;
+    font-size: 8px;
 
-    font-size: 12px;
-    line-height: 1.3;
+    font-weight: 650;
 }
 
-.analysis-summary-card strong {
+.analysis-kpi strong {
     display: block;
 
-    color: #0f172a;
+    margin-top: 4px;
 
-    font-size: 20px;
-    font-weight: 700;
+    color: #3d2e28;
 
-    line-height: 1.25;
+    font-size: 21px;
+
+    line-height: 1;
+
+    font-weight: 800;
 
     white-space: nowrap;
 }
 
-.analysis-summary-card small {
+.analysis-kpi small {
     display: block;
 
-    margin-top: 3px;
+    margin-top: 5px;
 
-    color: #94a3b8;
+    color: #a0958f;
 
-    font-size: 10px;
+    font-size: 8px;
+}
 
-    line-height: 1.4;
+.analysis-kpi-date {
+    font-size: 13px !important;
+}
+
+.trend-up {
+    color: #328d58 !important;
+}
+
+.trend-down {
+    color: #c94444 !important;
+}
+
+.trend-stable {
+    color: #75645c !important;
 }
 
 
 /* =========================================================
-   SECCIONES
+   PANELES
 ========================================================= */
 
-.analysis-section {
+.analysis-panel {
     background: #ffffff;
 
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
+    border: 1px solid #ebe5e1;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 5px 17px rgba(62, 39, 35, .045);
 
     overflow: hidden;
 
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    margin-bottom: 16px;
 }
 
-.analysis-section {
-    margin-bottom: 24px;
-}
-
-
-/* =========================================================
-   CABECERA DE SECCIÓN
-========================================================= */
-
-.section-header {
-    min-height: 76px;
-
+.analysis-panel-header {
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
 
     gap: 20px;
 
-    padding: 20px 24px;
+    padding: 19px 20px 15px;
 
-    border-bottom: 1px solid #edf0f4;
+    border-bottom: 1px solid #f0ece9;
 }
 
-.section-header h2 {
-    margin: 0 0 5px;
+.analysis-panel-header h2 {
+    margin: 6px 0 0;
 
-    color: #0f172a;
+    color: #3b2c27;
 
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 16px;
+
+    font-weight: 750;
 }
 
-.section-header p {
-    margin: 0;
+.analysis-panel-header p {
+    max-width: 650px;
 
-    color: #64748b;
+    margin: 5px 0 0;
 
-    font-size: 13px;
+    color: #8b7e77;
+
+    font-size: 9px;
+
     line-height: 1.5;
 }
 
-
-/* =========================================================
-   BADGE
-========================================================= */
-
-.analysis-badge {
+.analysis-data-badge {
     display: inline-flex;
+
     align-items: center;
 
-    gap: 7px;
+    gap: 6px;
 
     flex-shrink: 0;
 
-    padding: 8px 12px;
+    padding: 6px 9px;
 
-    border-radius: 999px;
+    background: #f4efeb;
 
-    background: #f8fafc;
+    color: #80695d;
 
-    color: #64748b;
+    border-radius: 20px;
 
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 8px;
 
-    white-space: nowrap;
-}
-
-.analysis-badge i {
-    color: #4f46e5;
+    font-weight: 700;
 }
 
 
@@ -341,20 +463,19 @@
    GRÁFICO
 ========================================================= */
 
-.chart-container {
+.analysis-chart {
     position: relative;
 
     width: 100%;
-    height: 380px;
 
-    padding: 24px 28px 20px;
+    height: 360px;
+
+    padding: 18px 20px 20px;
 
     box-sizing: border-box;
 }
 
-.chart-container canvas {
-    display: block;
-
+.analysis-chart canvas {
     width: 100% !important;
     height: 100% !important;
 }
@@ -364,117 +485,113 @@
    GRID INFERIOR
 ========================================================= */
 
-.analysis-bottom-grid {
+.analysis-grid {
     display: grid;
 
-    grid-template-columns: 1.15fr 1fr;
+    grid-template-columns: 1.05fr 1fr;
 
-    gap: 24px;
-
-    margin-top: 0;
+    gap: 16px;
 }
 
-
-/* Evita doble margen en las tarjetas inferiores */
-
-.analysis-bottom-grid .analysis-section {
-    margin-bottom: 24px;
+.analysis-grid .analysis-panel {
+    margin-bottom: 16px;
 }
 
 
 /* =========================================================
-   LISTA DE PRINCIPALES DÍAS
+   DÍAS
 ========================================================= */
 
-.trend-list {
-    padding: 4px 24px 18px;
+.analysis-days {
+    padding: 3px 20px 15px;
 }
 
-.trend-item {
-    min-height: 58px;
+.analysis-day {
+    display: grid;
 
-    display: flex;
+    grid-template-columns:
+        28px
+        minmax(0, 1fr)
+        auto;
+
     align-items: center;
 
-    gap: 14px;
+    gap: 10px;
 
     padding: 12px 0;
 
-    border-bottom: 1px solid #edf0f4;
+    border-bottom: 1px solid #f0ece9;
 }
 
-.trend-item:last-child {
+.analysis-day:last-child {
     border-bottom: none;
 }
 
-
-/* posición */
-
-.trend-position {
-    width: 30px;
-    height: 30px;
-
-    flex-shrink: 0;
+.analysis-day-number {
+    width: 27px;
+    height: 27px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border-radius: 8px;
+    border-radius: 7px;
 
-    background: #eef2ff;
-    color: #4f46e5;
+    background: #f3eee9;
 
-    font-size: 12px;
-    font-weight: 700;
+    color: #765d50;
+
+    font-size: 8px;
+
+    font-weight: 800;
 }
 
-
-/* información */
-
-.trend-info {
+.analysis-day-info {
     min-width: 0;
-
-    display: flex;
-    flex-direction: column;
-
-    gap: 3px;
-
-    flex: 1;
 }
 
-.trend-info strong {
-    color: #334155;
+.analysis-day-info strong {
+    display: block;
 
-    font-size: 13px;
-    font-weight: 600;
+    color: #473631;
+
+    font-size: 10px;
+
+    font-weight: 750;
 }
 
-.trend-info span {
-    color: #94a3b8;
+.analysis-day-info span {
+    display: block;
 
-    font-size: 11px;
+    margin-top: 3px;
+
+    color: #9a8e88;
+
+    font-size: 8px;
 }
 
-
-/* cantidad */
-
-.trend-value {
-    flex-shrink: 0;
-
-    color: #0f172a;
-
-    font-size: 14px;
-    font-weight: 700;
-
+.analysis-day-value {
     text-align: right;
 }
 
-.trend-value small {
-    color: #94a3b8;
+.analysis-day-value strong {
+    display: block;
 
-    font-size: 10px;
-    font-weight: 400;
+    color: #46352f;
+
+    font-size: 13px;
+
+    font-weight: 800;
+}
+
+.analysis-day-value span {
+    display: block;
+
+    margin-top: 2px;
+
+    color: #a09690;
+
+    font-size: 7px;
 }
 
 
@@ -483,29 +600,26 @@
 ========================================================= */
 
 .analysis-insights {
-    padding: 4px 24px 18px;
+    padding: 3px 20px 15px;
 }
 
-.insight-item {
+.analysis-insight {
     display: flex;
 
-    gap: 13px;
+    gap: 10px;
 
-    padding: 14px 0;
+    padding: 13px 0;
 
-    border-bottom: 1px solid #edf0f4;
+    border-bottom: 1px solid #f0ece9;
 }
 
-.insight-item:last-child {
+.analysis-insight:last-child {
     border-bottom: none;
 }
 
-
-/* icono */
-
-.insight-icon {
-    width: 38px;
-    height: 38px;
+.analysis-insight-icon {
+    width: 35px;
+    height: 35px;
 
     flex-shrink: 0;
 
@@ -513,73 +627,98 @@
     align-items: center;
     justify-content: center;
 
-    border-radius: 10px;
+    border-radius: 9px;
 
-    background: #eef2ff;
-    color: #4f46e5;
+    background: #f3eee9;
 
-    font-size: 16px;
+    color: #765d50;
+
+    font-size: 14px;
 }
 
-
-/* texto */
-
-.insight-item > div:last-child {
+.analysis-insight > div:last-child {
     min-width: 0;
 }
 
-.insight-item strong {
+.analysis-insight strong {
     display: block;
 
     margin-bottom: 4px;
 
-    color: #334155;
+    color: #46352f;
 
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 10px;
+
+    font-weight: 750;
 }
 
-.insight-item p {
+.analysis-insight p {
     margin: 0;
 
-    color: #64748b;
+    color: #887c76;
 
-    font-size: 12px;
+    font-size: 9px;
 
-    line-height: 1.6;
+    line-height: 1.65;
 }
 
-.insight-item p b {
-    color: #334155;
+.analysis-insight p b {
+    color: #4c3a33;
 }
 
 
 /* =========================================================
-   ESTADO VACÍO
+   VACÍO
 ========================================================= */
 
 .analysis-empty {
-    padding: 45px 24px;
+    min-height: 250px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-direction: column;
+
+    padding: 25px;
 
     text-align: center;
-
-    color: #94a3b8;
 }
 
-.analysis-empty i {
-    display: block;
+.analysis-empty.compact {
+    min-height: 150px;
+}
 
-    margin-bottom: 10px;
+.analysis-empty-icon {
+    width: 50px;
+    height: 50px;
 
-    color: #cbd5e1;
+    display: flex;
 
-    font-size: 28px;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #f4efeb;
+
+    color: #80695d;
+
+    font-size: 20px;
+}
+
+.analysis-empty > i {
+    color: #8b776c;
+
+    font-size: 21px;
 }
 
 .analysis-empty h3 {
-    margin: 0 0 6px;
+    margin: 10px 0 0;
 
-    color: #475569;
+    color: #493831;
 
     font-size: 14px;
 }
@@ -587,11 +726,48 @@
 .analysis-empty p {
     max-width: 400px;
 
-    margin: 0 auto;
+    margin: 5px 0 0;
 
-    color: #94a3b8;
+    color: #968a84;
+
+    font-size: 9px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   NOTA
+========================================================= */
+
+.analysis-note {
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 8px;
+
+    padding: 11px 13px;
+
+    border: 1px solid #ebe5e1;
+
+    border-radius: 9px;
+
+    background: #faf8f6;
+}
+
+.analysis-note i {
+    color: #81695d;
 
     font-size: 12px;
+}
+
+.analysis-note p {
+    margin: 0;
+
+    color: #8c807a;
+
+    font-size: 8px;
 
     line-height: 1.6;
 }
@@ -601,85 +777,110 @@
    RESPONSIVE
 ========================================================= */
 
-@media (max-width: 1200px) {
+@media (max-width: 1100px) {
 
-    .analysis-summary {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .analysis-kpis {
+        grid-template-columns: repeat(2, 1fr);
     }
 
+    .analysis-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 
-@media (max-width: 900px) {
+@media (max-width: 800px) {
 
-    .analysis-bottom-grid {
-        grid-template-columns: 1fr;
+    .analysis-page {
+        width: calc(100% - 28px);
+
+        padding-top: 24px;
     }
 
-}
-
-
-@media (max-width: 700px) {
-
-    .analysis-summary {
-        grid-template-columns: 1fr;
-    }
-
-    .analysis-filter-form {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .filter-group {
-        width: 100%;
-        min-width: 0;
-    }
-
-    .analysis-filter-form .btn-primary {
-        width: 100%;
-    }
-
-    .section-header {
+    .analysis-hero {
         align-items: flex-start;
 
         flex-direction: column;
     }
 
-    .analysis-badge {
+    .analysis-context {
         align-self: flex-start;
     }
 
-    .chart-container {
-        height: 300px;
+    .analysis-filter-form {
+        align-items: stretch;
 
-        padding: 15px;
+        flex-direction: column;
     }
 
+    .analysis-filter-group {
+        width: 100%;
+
+        min-width: 0;
+    }
+
+    .analysis-filter-group select,
+    .analysis-consult-button {
+        width: 100%;
+    }
+
+    .analysis-panel-header {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .analysis-data-badge {
+        align-self: flex-start;
+    }
+
+    .analysis-chart {
+        height: 300px;
+    }
 }
 
 
-@media (max-width: 500px) {
+@media (max-width: 520px) {
 
-    .analysis-filters {
-        padding: 18px 16px;
+    .analysis-page {
+        width: calc(100% - 20px);
     }
 
-    .analysis-summary-card {
+    .analysis-hero h1 {
+        font-size: 24px;
+    }
+
+    .analysis-kpis {
+        grid-template-columns: 1fr;
+    }
+
+    .analysis-filter-card,
+    .analysis-panel {
+        border-radius: 12px;
+    }
+
+    .analysis-filter-card {
         padding: 16px;
     }
 
-    .analysis-summary-card strong {
-        font-size: 18px;
+    .analysis-panel-header {
+        padding: 16px;
     }
 
-    .section-header {
-        padding: 18px;
+    .analysis-chart {
+        height: 260px;
+
+        padding: 12px;
     }
 
-    .trend-list,
-    .analysis-insights {
-        padding-left: 18px;
-        padding-right: 18px;
+    .analysis-day {
+        grid-template-columns:
+            27px
+            minmax(0, 1fr)
+            auto;
     }
 
+    .analysis-day-value strong {
+        font-size: 12px;
+    }
 }

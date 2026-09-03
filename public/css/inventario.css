@@ -1,70 +1,40 @@
 /* =========================================================
-   INVENTARIO
-   PrediccionIA
-========================================================= */
-
-
-/* =========================================================
-   PÁGINA
+   INVENTARIO PROCÁFES
 ========================================================= */
 
 .inventory-page {
-    width: 100%;
+    width: min(1200px, calc(100% - 48px));
+
+    margin: 0 auto;
+
+    padding: 30px 0 45px;
+
+    color: #352a26;
 }
 
 
 /* =========================================================
-   RESUMEN DE INVENTARIO
+   ALERTAS
 ========================================================= */
 
-.inventory-summary {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 16px;
-    margin-bottom: 22px;
-}
-
-
-/* =========================================================
-   TARJETAS DEL RESUMEN
-========================================================= */
-
-.inventory-summary .summary-card {
-    min-width: 0;
-    padding: 18px 20px;
-
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 13px;
-
+.inventory-alert {
     display: flex;
-    align-items: center;
-    gap: 14px;
+    align-items: flex-start;
 
-    box-shadow:
-        0 2px 5px rgba(15, 23, 42, .025);
+    gap: 11px;
 
-    transition:
-        transform .2s ease,
-        box-shadow .2s ease;
+    padding: 12px 14px;
+
+    margin-bottom: 16px;
+
+    border-radius: 11px;
+
+    font-size: 10px;
 }
 
-
-.inventory-summary .summary-card:hover {
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 6px 16px rgba(15, 23, 42, .06);
-}
-
-
-/* =========================================================
-   ICONO DEL RESUMEN
-========================================================= */
-
-.inventory-summary .summary-icon {
-    width: 42px;
-    height: 42px;
+.inventory-alert-icon {
+    width: 28px;
+    height: 28px;
 
     flex-shrink: 0;
 
@@ -72,68 +42,235 @@
     align-items: center;
     justify-content: center;
 
-    border-radius: 10px;
-
-    background: var(--primary-light);
-    color: var(--primary);
-
-    font-size: 18px;
+    border-radius: 8px;
 }
 
-
-.inventory-summary .summary-icon.blue {
-    background: #eff6ff;
-    color: #2563eb;
+.inventory-alert.success {
+    background: #edf8f1;
+    color: #358b58;
 }
 
-
-.inventory-summary .summary-icon.warning {
-    background: var(--warning-bg);
-    color: var(--warning);
+.inventory-alert.success
+.inventory-alert-icon {
+    background: #dff3e6;
 }
 
-
-.inventory-summary .summary-icon.success {
-    background: var(--success-bg);
-    color: var(--success);
+.inventory-alert.danger {
+    background: #fff0f0;
+    color: #bf4040;
 }
 
+.inventory-alert.danger
+.inventory-alert-icon {
+    background: #ffe1e1;
+}
 
-.inventory-summary .summary-icon.danger {
-    background: var(--danger-bg);
-    color: var(--danger);
+.inventory-alert strong {
+    display: block;
+
+    margin-bottom: 2px;
+
+    font-size: 10px;
+}
+
+.inventory-alert span {
+    display: block;
+
+    line-height: 1.5;
 }
 
 
 /* =========================================================
-   INFORMACIÓN DEL RESUMEN
+   HERO
 ========================================================= */
 
-.inventory-summary .summary-info {
-    min-width: 0;
+.inventory-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 25px;
+
+    margin-bottom: 25px;
+}
+
+.inventory-eyebrow,
+.inventory-section-label {
+    display: block;
+
+    color: #947d72;
+
+    font-size: 8px;
+    font-weight: 800;
+
+    letter-spacing: 1px;
+}
+
+.inventory-eyebrow {
+    margin-bottom: 8px;
+}
+
+.inventory-hero h1 {
+    margin: 0;
+
+    color: #32231e;
+
+    font-size: 29px;
+    font-weight: 750;
+
+    line-height: 1.2;
+}
+
+.inventory-hero p {
+    margin: 8px 0 0;
+
+    color: #81746e;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+}
+
+.inventory-primary-button {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 11px 15px;
+
+    border: none;
+    border-radius: 9px;
+
+    background: #47362f;
+
+    color: #ffffff;
+
+    font-size: 10px;
+    font-weight: 750;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 5px 15px rgba(62, 39, 35, .12);
+
+    transition:
+        transform .15s ease,
+        box-shadow .15s ease;
+}
+
+.inventory-primary-button:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 8px 20px rgba(62, 39, 35, .17);
+}
+
+
+/* =========================================================
+   RESUMEN
+========================================================= */
+
+.inventory-summary {
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 14px;
+
+    margin-bottom: 17px;
+}
+
+.inventory-summary-card {
+    display: flex;
+    align-items: center;
+
+    min-height: 105px;
+
+    padding: 17px;
+
+    background: #ffffff;
+
+    border: 1px solid #ebe5e1;
+
+    border-radius: 13px;
+
+    box-shadow:
+        0 4px 15px rgba(62, 39, 35, .045);
+}
+
+.summary-card-icon {
+    width: 40px;
+    height: 40px;
+
+    flex-shrink: 0;
 
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 
-    gap: 4px;
+    margin-right: 12px;
+
+    border-radius: 10px;
+
+    font-size: 16px;
 }
 
-
-.inventory-summary .summary-info span {
-    color: var(--text-soft);
-
-    font-size: 11px;
-    font-weight: 500;
+.summary-card-icon.brown {
+    background: #f4eeea;
+    color: #745a4d;
 }
 
+.summary-card-icon.orange {
+    background: #fff4e7;
+    color: #d77b20;
+}
 
-.inventory-summary .summary-info strong {
-    color: var(--text);
+.summary-card-icon.red {
+    background: #fff0f0;
+    color: #d14949;
+}
 
-    font-size: 20px;
-    font-weight: 700;
+.summary-card-icon.green {
+    background: #edf8f1;
+    color: #36965b;
+}
 
-    line-height: 1.1;
+.summary-card-content {
+    min-width: 0;
+}
+
+.summary-card-content span {
+    display: block;
+
+    color: #7f736d;
+
+    font-size: 9px;
+    font-weight: 650;
+}
+
+.summary-card-content strong {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #3c2d27;
+
+    font-size: 24px;
+
+    line-height: 1;
+
+    font-weight: 800;
+}
+
+.summary-card-content small {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #9c908a;
+
+    font-size: 8px;
 }
 
 
@@ -142,58 +279,47 @@
 ========================================================= */
 
 .inventory-panel {
-    width: 100%;
-    overflow: hidden;
+    background: #ffffff;
 
-    margin-bottom: 20px;
+    border: 1px solid #ebe5e1;
 
-    background: var(--white);
-
-    border: 1px solid var(--border);
-    border-radius: 13px;
+    border-radius: 14px;
 
     box-shadow:
-        0 2px 5px rgba(15, 23, 42, .025);
+        0 5px 18px rgba(62, 39, 35, .045);
+
+    overflow: hidden;
+
+    margin-bottom: 17px;
 }
 
-
-/* =========================================================
-   CABECERA DEL PANEL
-========================================================= */
-
 .inventory-panel-header {
-    min-height: 78px;
-
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
 
     gap: 20px;
 
-    padding: 18px 22px;
-
-    border-bottom: 1px solid var(--border);
+    padding: 20px 21px 16px;
 }
-
 
 .inventory-panel-header h2 {
-    margin: 0 0 5px;
+    margin: 6px 0 0;
 
-    color: var(--text);
+    color: #392a25;
 
-    font-size: 16px;
-    font-weight: 700;
-
-    letter-spacing: -.2px;
+    font-size: 17px;
+    font-weight: 750;
 }
 
-
 .inventory-panel-header p {
-    margin: 0;
+    margin: 5px 0 0;
 
-    color: var(--text-soft);
+    color: #8d817a;
 
-    font-size: 12px;
+    font-size: 9px;
+
+    line-height: 1.5;
 }
 
 
@@ -202,75 +328,53 @@
 ========================================================= */
 
 .inventory-search {
-    position: relative;
+    width: 240px;
 
-    width: 230px;
+    display: flex;
+    align-items: center;
 
-    flex-shrink: 0;
+    gap: 8px;
+
+    padding: 8px 11px;
+
+    border: 1px solid #e9e3df;
+
+    border-radius: 8px;
+
+    background: #faf8f6;
+
+    transition:
+        border-color .15s ease,
+        background .15s ease;
 }
 
+.inventory-search:focus-within {
+    border-color: #b8a49a;
+
+    background: #ffffff;
+}
 
 .inventory-search i {
-    position: absolute;
+    color: #998a83;
 
-    left: 12px;
-    top: 50%;
-
-    transform: translateY(-50%);
-
-    color: var(--text-light);
-
-    font-size: 14px;
-
-    pointer-events: none;
+    font-size: 12px;
 }
-
 
 .inventory-search input {
     width: 100%;
-    height: 40px;
 
-    padding: 0 12px 0 35px;
-
-    border: 1px solid var(--border);
-    border-radius: 8px;
-
-    background: var(--white);
-
-    color: var(--text);
-
-    font-family: inherit;
-    font-size: 12px;
-
+    border: none;
     outline: none;
 
-    transition:
-        border-color .2s ease,
-        box-shadow .2s ease;
-}
+    background: transparent;
 
+    color: #493a34;
+
+    font-size: 9px;
+}
 
 .inventory-search input::placeholder {
-    color: var(--text-light);
-}
-
-
-.inventory-search input:focus {
-    border-color: #a5b4fc;
-
-    box-shadow:
-        0 0 0 3px rgba(79, 70, 229, .08);
-}
-
-
-/* =========================================================
-   CONTENEDOR TABLA
-========================================================= */
-
-.inventory-table-wrapper {
-    width: 100%;
-
-    overflow-x: auto;
+    color: #a59a94;
 }
 
 
@@ -278,72 +382,58 @@
    TABLA
 ========================================================= */
 
+.inventory-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+
+    border-top: 1px solid #f0ece9;
+}
+
 .inventory-table {
     width: 100%;
 
-    min-width: 850px;
+    min-width: 780px;
 
     border-collapse: collapse;
-
-    table-layout: fixed;
 }
 
+.inventory-table thead th {
+    padding: 11px 16px;
 
-/* =========================================================
-   ENCABEZADOS
-========================================================= */
+    background: #fbfaf9;
 
-.inventory-table th {
-    padding: 13px 16px;
+    border-bottom: 1px solid #ebe5e1;
 
-    background: #f8fafc;
+    color: #8f827b;
 
-    border-bottom: 1px solid var(--border);
-
-    color: var(--text-soft);
-
-    font-size: 10px;
-    font-weight: 700;
+    font-size: 8px;
+    font-weight: 800;
 
     text-align: left;
-    text-transform: uppercase;
 
     letter-spacing: .5px;
-
-    white-space: nowrap;
 }
 
+.inventory-table tbody td {
+    padding: 13px 16px;
 
-/* =========================================================
-   CELDAS
-========================================================= */
-
-.inventory-table td {
-    padding: 14px 16px;
-
-    border-bottom: 1px solid #f1f5f9;
-
-    color: var(--text);
-
-    font-size: 12px;
+    border-bottom: 1px solid #f1edea;
 
     vertical-align: middle;
 }
 
+.inventory-table tbody tr:last-child td {
+    border-bottom: none;
+}
 
 .inventory-table tbody tr {
     transition:
         background .15s ease;
 }
 
-
 .inventory-table tbody tr:hover {
-    background: #fafbff;
-}
-
-
-.inventory-table tbody tr:last-child td {
-    border-bottom: none;
+    background: #fcfaf9;
 }
 
 
@@ -352,18 +442,17 @@
 ========================================================= */
 
 .inventory-product {
-    min-width: 0;
-
     display: flex;
     align-items: center;
 
-    gap: 11px;
+    gap: 10px;
+
+    min-width: 210px;
 }
 
-
-.inventory-product-icon {
-    width: 38px;
-    height: 38px;
+.inventory-product-avatar {
+    width: 35px;
+    height: 35px;
 
     flex-shrink: 0;
 
@@ -373,53 +462,57 @@
 
     border-radius: 9px;
 
-    background: var(--primary-light);
-    color: var(--primary);
+    background: #f4efeb;
 
-    font-size: 16px;
+    color: #765d50;
+
+    font-size: 13px;
 }
 
-
-.inventory-product-info {
-    min-width: 0;
-
-    display: flex;
-    flex-direction: column;
-
-    gap: 4px;
-}
-
-
-.inventory-product-info strong {
+.inventory-product strong {
     display: block;
 
-    overflow: hidden;
-
-    color: var(--text);
-
-    font-size: 12px;
-    font-weight: 700;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-
-.inventory-product-info small {
-    display: block;
-
-    overflow: hidden;
-
-    max-width: 280px;
-
-    color: var(--text-soft);
+    color: #44342e;
 
     font-size: 10px;
+    font-weight: 750;
+}
 
-    line-height: 1.3;
+.inventory-product span {
+    display: block;
+
+    max-width: 210px;
+
+    margin-top: 3px;
+
+    overflow: hidden;
+
+    color: #9a8e88;
+
+    font-size: 8px;
 
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+
+/* =========================================================
+   CATEGORÍA
+========================================================= */
+
+.category-chip {
+    display: inline-block;
+
+    padding: 5px 8px;
+
+    background: #f5f1ee;
+
+    border-radius: 6px;
+
+    color: #725c51;
+
+    font-size: 8px;
+    font-weight: 650;
 }
 
 
@@ -427,38 +520,37 @@
    STOCK
 ========================================================= */
 
-.inventory-stock {
-    min-width: 42px;
+.stock-value {
+    color: #40312b;
 
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 13px;
 
-    padding: 6px 10px;
-
-    border-radius: 7px;
-
-    background: #f1f5f9;
-
-    color: var(--text);
-
-    font-size: 12px;
-    font-weight: 700;
+    font-weight: 800;
 }
 
+.stock-value small {
+    margin-left: 2px;
 
-.inventory-stock.low {
-    background: var(--warning-bg);
+    color: #9b908a;
 
-    color: var(--warning);
+    font-size: 7px;
+
+    font-weight: 500;
 }
 
+.stock-value.low {
+    color: #d47b20;
+}
 
-.inventory-number {
-    color: var(--text-soft);
+.stock-value.empty {
+    color: #cf4141;
+}
 
-    font-size: 12px;
-    font-weight: 600;
+.table-number {
+    color: #685850;
+
+    font-size: 11px;
+    font-weight: 650;
 }
 
 
@@ -466,24 +558,63 @@
    ESTADO
 ========================================================= */
 
-.inventory-status {
-    font-size: 11px;
-    font-weight: 600;
+.stock-status {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 5px 8px;
+
+    border-radius: 20px;
+
+    font-size: 8px;
+    font-weight: 750;
+
+    white-space: nowrap;
 }
 
+.stock-status i {
+    width: 5px;
+    height: 5px;
 
-.inventory-status.normal {
-    color: var(--success);
+    border-radius: 50%;
 }
 
-
-.inventory-status.low {
-    color: var(--warning);
+.stock-status.success {
+    background: #edf8f1;
+    color: #338b58;
 }
 
+.stock-status.success i {
+    background: #43ad68;
+}
 
-.inventory-status.critical {
-    color: var(--danger);
+.stock-status.warning {
+    background: #fff5e9;
+    color: #c9781e;
+}
+
+.stock-status.warning i {
+    background: #e38a34;
+}
+
+.stock-status.danger {
+    background: #fff0f0;
+    color: #c43d3d;
+}
+
+.stock-status.danger i {
+    background: #d54a4a;
+}
+
+.stock-status.inactive {
+    background: #f1efee;
+    color: #8e8580;
+}
+
+.stock-status.inactive i {
+    background: #a59d98;
 }
 
 
@@ -491,121 +622,166 @@
    MOVIMIENTOS
 ========================================================= */
 
-.movements-panel {
-    margin-top: 20px;
+.movements-header {
+    align-items: center;
 }
 
+.movement-info {
+    display: inline-flex;
+    align-items: center;
 
-.movement-badge {
+    gap: 6px;
+
+    padding: 6px 9px;
+
+    border-radius: 20px;
+
+    background: #f5f1ee;
+
+    color: #80695d;
+
+    font-size: 8px;
+
+    font-weight: 650;
+}
+
+.movement-product {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+}
+
+.movement-product-icon {
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: #f5f1ee;
+
+    color: #755e52;
+
+    font-size: 12px;
+}
+
+.movement-product strong {
+    color: #44342e;
+
+    font-size: 9px;
+}
+
+.movement-type {
     display: inline-flex;
     align-items: center;
 
     gap: 5px;
 
-    padding: 5px 9px;
+    padding: 5px 8px;
 
     border-radius: 20px;
 
-    font-size: 9px;
-    font-weight: 700;
+    font-size: 8px;
 
-    white-space: nowrap;
+    font-weight: 750;
 }
 
-
-.movement-badge.entry {
-    background: var(--success-bg);
-    color: var(--success);
+.movement-type.entry {
+    background: #edf8f1;
+    color: #338b58;
 }
 
-
-.movement-badge.exit {
-    background: var(--danger-bg);
-    color: var(--danger);
+.movement-type.exit {
+    background: #fff0f0;
+    color: #c43d3d;
 }
 
-
-.movement-badge.restock {
-    background: var(--primary-light);
-    color: var(--primary);
+.movement-type.restock {
+    background: #f3efff;
+    color: #7055bd;
 }
 
-
-.movement-badge.adjustment {
-    background: var(--warning-bg);
-    color: var(--warning);
+.movement-type.adjustment {
+    background: #f4f1ef;
+    color: #756b66;
 }
-
-
-/* =========================================================
-   FECHA
-========================================================= */
-
-.movement-date {
-    color: var(--text-soft);
-
-    font-size: 11px;
-
-    white-space: nowrap;
-}
-
-
-/* =========================================================
-   CANTIDAD
-========================================================= */
 
 .movement-quantity {
-    font-weight: 700;
+    color: #43332d;
+
+    font-size: 12px;
+
+    font-weight: 800;
 }
 
+.movement-stock {
+    color: #756861;
 
-.movement-quantity.positive {
-    color: var(--success);
+    font-size: 10px;
 }
 
+.movement-stock.current {
+    color: #40312b;
 
-.movement-quantity.negative {
-    color: var(--danger);
+    font-weight: 750;
+}
+
+.movement-date {
+    color: #938781;
+
+    font-size: 8px;
 }
 
 
 /* =========================================================
-   TABLA VACÍA
+   VACÍO
 ========================================================= */
 
 .inventory-empty {
-    padding: 55px 20px !important;
+    padding: 45px 20px !important;
 
     text-align: center;
 }
 
+.empty-state-icon {
+    width: 48px;
+    height: 48px;
 
-.inventory-empty i {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    margin-bottom: 12px;
+    margin: 0 auto 10px;
 
-    color: #cbd5e1;
+    border-radius: 50%;
 
-    font-size: 38px;
+    background: #f4efeb;
+
+    color: #80685b;
+
+    font-size: 19px;
 }
-
 
 .inventory-empty strong {
     display: block;
 
-    margin-bottom: 5px;
+    color: #4a3932;
 
-    color: var(--text);
-
-    font-size: 14px;
+    font-size: 12px;
 }
 
+.inventory-empty > span {
+    display: block;
 
-.inventory-empty span {
-    color: var(--text-soft);
+    margin-top: 5px;
 
-    font-size: 11px;
+    color: #9a8f89;
+
+    font-size: 9px;
 }
 
 
@@ -613,145 +789,117 @@
    MODAL
 ========================================================= */
 
+body.modal-open {
+    overflow: hidden;
+}
+
 .modal-overlay {
-    position: fixed !important;
+    position: fixed;
 
-    inset: 0 !important;
+    inset: 0;
 
-    z-index: 9999 !important;
+    z-index: 1000;
 
-    display: none !important;
-
+    display: flex;
     align-items: center;
     justify-content: center;
 
-    width: 100%;
-    height: 100%;
+    padding: 20px;
 
-    padding: 24px;
+    background: rgba(31, 25, 22, .48);
 
-    background: rgba(15, 23, 42, .60);
+    backdrop-filter: blur(5px);
 
     opacity: 0;
+    visibility: hidden;
 
-    pointer-events: none;
-
-    transition: opacity .2s ease;
+    transition:
+        opacity .2s ease,
+        visibility .2s ease;
 }
-
 
 .modal-overlay.show {
-    display: flex !important;
-
     opacity: 1;
-
-    pointer-events: auto;
+    visibility: visible;
 }
 
-
-/* =========================================================
-   MODAL - CONTENEDOR
-========================================================= */
-
 .movement-modal {
-    width: 100%;
-    max-width: 600px;
+    width: min(500px, 100%);
 
-    max-height: calc(100vh - 48px);
+    max-height: calc(100vh - 40px);
 
     overflow-y: auto;
 
-    background: var(--white);
+    background: #ffffff;
 
-    border-radius: 18px;
+    border-radius: 17px;
 
     box-shadow:
-        0 25px 60px rgba(15, 23, 42, .25);
+        0 25px 70px rgba(35, 26, 22, .25);
 
-    transform: translateY(15px) scale(.98);
+    transform: translateY(12px) scale(.98);
 
     transition:
         transform .2s ease;
 }
 
-
 .modal-overlay.show .movement-modal {
     transform: translateY(0) scale(1);
 }
 
-
-/* =========================================================
-   CABECERA MODAL
-========================================================= */
-
 .movement-modal-header {
     display: flex;
-
     align-items: flex-start;
     justify-content: space-between;
 
-    gap: 20px;
+    gap: 15px;
 
-    padding: 28px 30px 20px;
+    padding: 21px;
 
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid #eee9e6;
 }
-
 
 .movement-modal-header h2 {
-    margin: 5px 0 6px;
+    margin: 6px 0 0;
 
-    color: var(--text);
+    color: #382923;
 
-    font-size: 22px;
-    font-weight: 700;
+    font-size: 19px;
 }
-
 
 .movement-modal-header p {
-    margin: 0;
+    margin: 5px 0 0;
 
-    color: var(--text-soft);
+    color: #8d817a;
 
-    font-size: 14px;
+    font-size: 9px;
 }
 
-
-/* =========================================================
-   BOTÓN CERRAR
-========================================================= */
-
 .modal-close {
-    width: 38px;
-    height: 38px;
-
-    flex-shrink: 0;
+    width: 31px;
+    height: 31px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border: none;
-    border-radius: 10px;
+    flex-shrink: 0;
 
-    background: #f1f5f9;
+    border: 1px solid #ece6e2;
+    border-radius: 8px;
 
-    color: var(--text-soft);
+    background: #faf8f6;
 
-    font-size: 18px;
+    color: #81736c;
 
     cursor: pointer;
 
     transition:
-        background .2s ease,
-        color .2s ease;
+        background .15s ease;
 }
 
-
 .modal-close:hover {
-    background: #e2e8f0;
-
-    color: var(--text);
+    background: #f1ece8;
 }
 
 
@@ -760,150 +908,127 @@
 ========================================================= */
 
 .movement-form {
-    padding: 26px 30px 30px;
+    padding: 21px;
 }
 
-
-.movement-form .form-group {
-    margin-bottom: 20px;
+.form-group {
+    margin-bottom: 16px;
 }
 
-
-/* =========================================================
-   LABELS
-========================================================= */
-
-.movement-form label {
+.form-group label {
     display: block;
 
-    margin-bottom: 7px;
+    margin-bottom: 6px;
 
-    color: var(--text);
+    color: #4b3932;
 
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 10px;
+    font-weight: 750;
 }
 
+.form-group label span {
+    color: #a09690;
 
-/* =========================================================
-   INPUTS
-========================================================= */
+    font-weight: 500;
+}
 
-.movement-form input,
-.movement-form select,
-.movement-form textarea {
+.form-group input,
+.form-group select,
+.form-group textarea {
     width: 100%;
 
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    box-sizing: border-box;
 
-    background: var(--white);
+    padding: 10px 11px;
 
-    color: var(--text);
+    border: 1px solid #e7e0dc;
 
-    font-family: inherit;
-    font-size: 12px;
+    border-radius: 9px;
 
     outline: none;
 
+    background: #fcfaf9;
+
+    color: #45352f;
+
+    font-family: inherit;
+
+    font-size: 10px;
+
     transition:
-        border-color .2s ease,
-        box-shadow .2s ease;
+        border-color .15s ease,
+        background .15s ease,
+        box-shadow .15s ease;
 }
 
-
-.movement-form input,
-.movement-form select {
-    height: 42px;
-
-    padding: 0 12px;
-}
-
-
-.movement-form textarea {
-    min-height: 95px;
-
-    padding: 11px 12px;
-
+.form-group textarea {
     resize: vertical;
-
-    line-height: 1.5;
 }
 
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #9d8579;
 
-.movement-form input::placeholder,
-.movement-form textarea::placeholder {
-    color: var(--text-light);
-}
-
-
-.movement-form input:focus,
-.movement-form select:focus,
-.movement-form textarea:focus {
-    border-color: #a5b4fc;
+    background: #ffffff;
 
     box-shadow:
-        0 0 0 3px rgba(79, 70, 229, .08);
+        0 0 0 3px rgba(125, 98, 85, .08);
 }
 
+.form-group small {
+    display: block;
 
-/* =========================================================
-   AYUDA
-========================================================= */
-
-.movement-help {
-    margin-top: -12px;
-    margin-bottom: 20px;
-
-    color: var(--text-soft);
-
-    font-size: 11px;
-
-    line-height: 1.5;
-}
-
-
-/* =========================================================
-   ERRORES
-========================================================= */
-
-.form-error {
     margin-top: 5px;
 
-    color: var(--danger);
+    color: #9c918b;
 
-    font-size: 11px;
+    font-size: 8px;
 }
-
-
-/* =========================================================
-   ACCIONES MODAL
-========================================================= */
 
 .movement-form-actions {
     display: flex;
-
-    align-items: center;
     justify-content: flex-end;
 
-    gap: 10px;
+    gap: 9px;
 
-    padding-top: 5px;
+    margin-top: 21px;
 }
 
+.modal-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
-.movement-form-actions .btn-primary,
-.movement-form-actions .btn-secondary {
-    min-height: 42px;
+    gap: 6px;
+
+    padding: 9px 13px;
+
+    border-radius: 8px;
+
+    font-family: inherit;
+
+    font-size: 9px;
+
+    font-weight: 750;
+
+    cursor: pointer;
 }
 
+.modal-button.secondary {
+    border: 1px solid #e5ded9;
 
-/* =========================================================
-   BLOQUEAR SCROLL
-========================================================= */
+    background: #ffffff;
 
-body.modal-open {
-    overflow: hidden;
+    color: #776a63;
+}
+
+.modal-button.primary {
+    border: none;
+
+    background: #47362f;
+
+    color: #ffffff;
 }
 
 
@@ -911,21 +1036,31 @@ body.modal-open {
    RESPONSIVE
 ========================================================= */
 
-@media (max-width: 1150px) {
+@media (max-width: 1100px) {
 
     .inventory-summary {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, 1fr);
     }
-
 }
 
 
-@media (max-width: 750px) {
+@media (max-width: 800px) {
 
-    .inventory-summary {
-        grid-template-columns: 1fr;
+    .inventory-page {
+        width: calc(100% - 28px);
+
+        padding-top: 24px;
     }
 
+    .inventory-hero {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .inventory-primary-button {
+        width: 100%;
+    }
 
     .inventory-panel-header {
         align-items: flex-start;
@@ -933,60 +1068,41 @@ body.modal-open {
         flex-direction: column;
     }
 
-
     .inventory-search {
         width: 100%;
     }
 
-
-    .inventory-table {
-        min-width: 850px;
+    .movements-header {
+        align-items: flex-start;
     }
-
 }
 
 
-@media (max-width: 700px) {
+@media (max-width: 560px) {
 
-    .modal-overlay {
-        padding: 15px;
+    .inventory-page {
+        width: calc(100% - 20px);
     }
 
-
-    .movement-modal {
-        max-height: calc(100vh - 30px);
-
-        border-radius: 14px;
+    .inventory-summary {
+        grid-template-columns: 1fr;
     }
 
-
-    .movement-modal-header {
-        padding: 22px 20px 18px;
+    .inventory-hero h1 {
+        font-size: 24px;
     }
 
-
-    .movement-modal-header h2 {
-        font-size: 19px;
-    }
-
-
-    .movement-modal-header p {
-        font-size: 12px;
-    }
-
-
+    .inventory-panel-header,
+    .movement-modal-header,
     .movement-form {
-        padding: 20px;
+        padding: 17px;
     }
-
 
     .movement-form-actions {
-        flex-direction: column-reverse;
+        flex-direction: column;
     }
 
-
-    .movement-form-actions button {
+    .modal-button {
         width: 100%;
     }
-
 }

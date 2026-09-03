@@ -53,6 +53,7 @@ except Exception as e:
 
     sys.exit(1)
 
+
 # ============================================================
 # VARIABLES DEL MODELO
 # ============================================================
@@ -71,6 +72,7 @@ VARIABLES_MODELO = [
     "es_fin_de_semana",
     "es_dia_especial"
 ]
+
 
 # ============================================================
 # NORMALIZAR DATOS DE ENTRADA
@@ -100,17 +102,22 @@ def normalizar_datos(datos):
         del datos_normalizados["anio"]
 
     return datos_normalizados
+
+
 # ============================================================
 # PREDICCIÓN INDIVIDUAL
 # ============================================================
 
 def predecir_individual(datos):
+
     datos = normalizar_datos(datos)
+
     fila = {}
 
     for variable in VARIABLES_MODELO:
 
         if variable not in datos:
+
             raise ValueError(
                 f"Falta la variable requerida: {variable}"
             )
@@ -122,7 +129,9 @@ def predecir_individual(datos):
         columns=VARIABLES_MODELO
     )
 
-    prediccion = modelo.predict(entrada)[0]
+    prediccion = modelo.predict(
+        entrada
+    )[0]
 
     prediccion = max(
         0,
@@ -142,40 +151,56 @@ def predecir_individual(datos):
 def predecir_multiple(datos):
 
     if not isinstance(datos, list):
+
         raise ValueError(
             "La entrada múltiple debe ser una lista."
         )
 
     if len(datos) == 0:
+
         return {
             "success": True,
             "predicciones": []
         }
 
     filas = []
+
     datos_normalizados = []
+
     for dato in datos:
-        dato = normalizar_datos(dato)
+
+        dato = normalizar_datos(
+            dato
+        )
+
         fila = {}
 
         for variable in VARIABLES_MODELO:
 
             if variable not in dato:
+
                 raise ValueError(
                     f"Falta la variable requerida: {variable}"
                 )
 
             fila[variable] = dato[variable]
 
-        filas.append(fila)
-        datos_normalizados.append(dato)
+        filas.append(
+            fila
+        )
+
+        datos_normalizados.append(
+            dato
+        )
 
     entrada = pd.DataFrame(
         filas,
         columns=VARIABLES_MODELO
     )
 
-    predicciones = modelo.predict(entrada)
+    predicciones = modelo.predict(
+        entrada
+    )
 
     resultado = []
 
@@ -228,8 +253,7 @@ def predecir_mensual(datos):
 
         "historial": {
             "2026-08-01": 5,
-            "2026-08-02": 7,
-            ...
+            "2026-08-02": 7
         },
 
         "fechas": [
@@ -248,9 +272,15 @@ def predecir_mensual(datos):
     para utilizarse en los días siguientes.
     """
 
-    producto = datos.get("producto")
+    producto = datos.get(
+        "producto"
+    )
 
-    if not isinstance(producto, dict):
+    if not isinstance(
+        producto,
+        dict
+    ):
+
         raise ValueError(
             "Falta la información del producto."
         )
@@ -264,11 +294,13 @@ def predecir_mensual(datos):
     )
 
     if producto_id is None:
+
         raise ValueError(
             "Falta producto_id."
         )
 
     if categoria_id is None:
+
         raise ValueError(
             "Falta categoria_id."
         )
@@ -282,6 +314,7 @@ def predecir_mensual(datos):
         historial_original,
         dict
     ):
+
         raise ValueError(
             "El historial debe ser un objeto."
         )
@@ -295,12 +328,13 @@ def predecir_mensual(datos):
         fechas,
         list
     ):
+
         raise ValueError(
             "Las fechas deben ser una lista."
         )
 
     # --------------------------------------------------------
-    # Copiar historial
+    # COPIAR HISTORIAL
     # --------------------------------------------------------
 
     historial = {}
@@ -309,34 +343,46 @@ def predecir_mensual(datos):
 
         historial[str(fecha)] = max(
             0,
-            int(round(float(cantidad)))
+            int(
+                round(
+                    float(cantidad)
+                )
+            )
         )
 
     # --------------------------------------------------------
-    # Ordenar fechas
+    # ORDENAR FECHAS
     # --------------------------------------------------------
 
     fechas_ordenadas = sorted(
         fechas,
-        key=lambda x: x.get("fecha", "")
+        key=lambda x: x.get(
+            "fecha",
+            ""
+        )
     )
 
     resultados = []
 
     # --------------------------------------------------------
-    # Procesar cada día
+    # PROCESAR CADA DÍA
     # --------------------------------------------------------
 
     for dia in fechas_ordenadas:
 
-        fecha = dia.get("fecha")
+        fecha = dia.get(
+            "fecha"
+        )
 
         if not fecha:
+
             raise ValueError(
                 "Una fecha de predicción está vacía."
             )
 
-        fecha = str(fecha)
+        fecha = str(
+            fecha
+        )
 
         fecha_dt = pd.Timestamp(
             fecha
@@ -349,7 +395,9 @@ def predecir_mensual(datos):
         fecha_anterior = (
             fecha_dt -
             pd.Timedelta(days=1)
-        ).strftime("%Y-%m-%d")
+        ).strftime(
+            "%Y-%m-%d"
+        )
 
         demanda_anterior = int(
             historial.get(
@@ -365,7 +413,9 @@ def predecir_mensual(datos):
         fecha_7 = (
             fecha_dt -
             pd.Timedelta(days=7)
-        ).strftime("%Y-%m-%d")
+        ).strftime(
+            "%Y-%m-%d"
+        )
 
         demanda_7_dias = int(
             historial.get(
@@ -381,7 +431,9 @@ def predecir_mensual(datos):
         fecha_14 = (
             fecha_dt -
             pd.Timedelta(days=14)
-        ).strftime("%Y-%m-%d")
+        ).strftime(
+            "%Y-%m-%d"
+        )
 
         demanda_14_dias = int(
             historial.get(
@@ -401,7 +453,9 @@ def predecir_mensual(datos):
             fecha_hist = (
                 fecha_dt -
                 pd.Timedelta(days=i)
-            ).strftime("%Y-%m-%d")
+            ).strftime(
+                "%Y-%m-%d"
+            )
 
             valores_7.append(
                 historial.get(
@@ -425,7 +479,9 @@ def predecir_mensual(datos):
             fecha_hist = (
                 fecha_dt -
                 pd.Timedelta(days=i)
-            ).strftime("%Y-%m-%d")
+            ).strftime(
+                "%Y-%m-%d"
+            )
 
             valores_30.append(
                 historial.get(
@@ -459,7 +515,10 @@ def predecir_mensual(datos):
         anio = int(
             dia.get(
                 "año",
-                fecha_dt.year
+                dia.get(
+                    "anio",
+                    fecha_dt.year
+                )
             )
         )
 
@@ -542,24 +601,28 @@ def predecir_mensual(datos):
 
         prediccion = max(
             0,
-            int(round(prediccion))
+            int(
+                round(
+                    prediccion
+                )
+            )
         )
 
         # ====================================================
-        # GUARDAR PREDICCIÓN
+        # GUARDAR PREDICCIÓN EN HISTORIAL
         # ====================================================
 
         historial[fecha] = prediccion
+
         # ====================================================
         # RESULTADO
         # ====================================================
 
         variables_respuesta = fila.copy()
 
-        # El modelo internamente utiliza "año".
-        # Para la respuesta hacia Laravel usamos "anio"
-        # para evitar problemas de codificación en Windows.
+        # Para Laravel usamos "anio".
         if "año" in variables_respuesta:
+
             variables_respuesta["anio"] = (
                 variables_respuesta["año"]
             )
@@ -594,6 +657,112 @@ def predecir_mensual(datos):
 
 
 # ============================================================
+# PREDICCIÓN MENSUAL MÚLTIPLE
+# ============================================================
+
+def predecir_mensual_multiple(datos):
+
+    """
+    Realiza predicciones mensuales para varios productos
+    en una sola ejecución de Python.
+
+    Recibe:
+
+    {
+        "modo": "mensual_multiple",
+
+        "solicitudes": [
+            {
+                "producto": {
+                    "producto_id": 1,
+                    "categoria_id": 1
+                },
+
+                "historial": {
+                    "2026-08-01": 5,
+                    "2026-08-02": 7
+                },
+
+                "fechas": [
+                    {
+                        "fecha": "2026-09-02",
+                        "dia_semana": 3,
+                        "mes": 9,
+                        "anio": 2026,
+                        "es_fin_de_semana": 0,
+                        "es_dia_especial": 0
+                    }
+                ]
+            }
+        ]
+    }
+
+    El modelo se carga una sola vez y se reutiliza
+    para todos los productos.
+    """
+
+    solicitudes = datos.get(
+        "solicitudes",
+        []
+    )
+
+    if not isinstance(
+        solicitudes,
+        list
+    ):
+
+        raise ValueError(
+            "Las solicitudes deben ser una lista."
+        )
+
+    if len(solicitudes) == 0:
+
+        return {
+            "success": True,
+            "predicciones": []
+        }
+
+    resultados = []
+
+    for solicitud in solicitudes:
+
+        if not isinstance(
+            solicitud,
+            dict
+        ):
+
+            raise ValueError(
+                "Cada solicitud mensual debe ser un objeto."
+            )
+
+        resultado = predecir_mensual(
+            solicitud
+        )
+
+        resultados.append({
+
+            "producto_id":
+                resultado.get(
+                    "producto_id"
+                ),
+
+            "predicciones":
+                resultado.get(
+                    "predicciones",
+                    []
+                )
+        })
+
+    return {
+
+        "success": True,
+
+        "predicciones":
+            resultados
+    }
+
+
+# ============================================================
 # LEER JSON
 # ============================================================
 
@@ -614,10 +783,24 @@ def main():
         )
 
         # ====================================================
-        # MODO MENSUAL
+        # MODO MENSUAL MÚLTIPLE
         # ====================================================
 
         if (
+            isinstance(datos, dict)
+            and
+            datos.get("modo") == "mensual_multiple"
+        ):
+
+            resultado = predecir_mensual_multiple(
+                datos
+            )
+
+        # ====================================================
+        # MODO MENSUAL
+        # ====================================================
+
+        elif (
             isinstance(datos, dict)
             and
             datos.get("modo") == "mensual"
@@ -653,11 +836,19 @@ def main():
                 datos
             )
 
+        # ====================================================
+        # FORMATO NO VÁLIDO
+        # ====================================================
+
         else:
 
             raise ValueError(
                 "Formato JSON no válido."
             )
+
+        # ====================================================
+        # RESPUESTA JSON
+        # ====================================================
 
         print(
             json.dumps(
@@ -683,4 +874,5 @@ def main():
 # ============================================================
 
 if __name__ == "__main__":
+
     main()

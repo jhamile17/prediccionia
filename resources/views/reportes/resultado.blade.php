@@ -10,7 +10,9 @@
 
 <div class="reports-page">
 
-    {{-- ENCABEZADO --}}
+    {{-- =========================================================
+         ENCABEZADO
+    ========================================================== --}}
 
     <div class="page-header">
 
@@ -30,7 +32,8 @@
 
         </div>
 
-        <div>
+        <div class="report-actions">
+
             <a
                 href="{{ route('reportes.index') }}"
                 class="btn btn-secondary"
@@ -38,14 +41,30 @@
                 <i class="bi bi-arrow-left"></i>
                 Volver a reportes
             </a>
+
+            <a
+                href="{{ route('reportes.exportar.excel', [
+                    'tipo' => $tipo,
+                    'periodo' => $periodo
+                ]) }}"
+                class="btn btn-primary"
+            >
+                <i class="bi bi-file-earmark-excel"></i>
+                Descargar Excel
+            </a>
+
         </div>
 
     </div>
 
 
-    {{-- RESUMEN --}}
+    {{-- =========================================================
+         RESUMEN
+    ========================================================== --}}
 
     <div class="reports-summary">
+
+        {{-- TIPO DE REPORTE --}}
 
         <div class="report-summary-card">
 
@@ -54,7 +73,10 @@
             </div>
 
             <div>
-                <span>Tipo de reporte</span>
+
+                <span>
+                    Tipo de reporte
+                </span>
 
                 <strong>
                     {{ ucfirst($tipo) }}
@@ -63,10 +85,13 @@
                 <small>
                     reporte generado
                 </small>
+
             </div>
 
         </div>
 
+
+        {{-- PERÍODO --}}
 
         <div class="report-summary-card">
 
@@ -75,7 +100,10 @@
             </div>
 
             <div>
-                <span>Período</span>
+
+                <span>
+                    Período
+                </span>
 
                 <strong>
                     {{ $periodo }}
@@ -84,10 +112,13 @@
                 <small>
                     días analizados
                 </small>
+
             </div>
 
         </div>
 
+
+        {{-- REGISTROS --}}
 
         <div class="report-summary-card">
 
@@ -96,7 +127,10 @@
             </div>
 
             <div>
-                <span>Registros</span>
+
+                <span>
+                    Registros
+                </span>
 
                 <strong>
                     {{ number_format($totalRegistros) }}
@@ -105,10 +139,13 @@
                 <small>
                     registros encontrados
                 </small>
+
             </div>
 
         </div>
 
+
+        {{-- FECHA DE GENERACIÓN --}}
 
         <div class="report-summary-card">
 
@@ -117,7 +154,10 @@
             </div>
 
             <div>
-                <span>Generado</span>
+
+                <span>
+                    Generado
+                </span>
 
                 <strong>
                     {{ now()->format('d/m/Y') }}
@@ -126,6 +166,7 @@
                 <small>
                     {{ now()->format('H:i') }}
                 </small>
+
             </div>
 
         </div>
@@ -133,9 +174,13 @@
     </div>
 
 
-    {{-- RESULTADO --}}
+    {{-- =========================================================
+         RESULTADO DEL REPORTE
+    ========================================================== --}}
 
     <div class="reports-section">
+
+        {{-- CABECERA --}}
 
         <div class="section-header">
 
@@ -152,32 +197,63 @@
             </div>
 
             <div class="reports-badge">
+
                 <i class="bi bi-check-circle"></i>
+
                 Datos disponibles
+
             </div>
 
         </div>
 
 
+        {{-- =====================================================
+             DATOS
+        ====================================================== --}}
+
         @if($totalRegistros > 0)
 
             <div class="report-table-wrapper">
 
-                {{-- PRODUCTOS --}}
+
+                {{-- =================================================
+                     PRODUCTOS
+                ================================================== --}}
 
                 @if($tipo === 'productos')
 
-                    <table class="report-table">
+                    <table class="reports-table">
 
                         <thead>
+
                             <tr>
-                                <th>Producto</th>
-                                <th>Categoría</th>
-                                <th>Precio</th>
-                                <th>Costo</th>
-                                <th>Stock</th>
-                                <th>Estado</th>
+
+                                <th>
+                                    Producto
+                                </th>
+
+                                <th>
+                                    Categoría
+                                </th>
+
+                                <th>
+                                    Precio
+                                </th>
+
+                                <th>
+                                    Costo
+                                </th>
+
+                                <th>
+                                    Stock
+                                </th>
+
+                                <th>
+                                    Estado
+                                </th>
+
                             </tr>
+
                         </thead>
 
                         <tbody>
@@ -197,11 +273,13 @@
                                     </td>
 
                                     <td>
-                                        S/ {{ number_format($dato->precio, 2) }}
+                                        S/
+                                        {{ number_format($dato->precio, 2) }}
                                     </td>
 
                                     <td>
-                                        S/ {{ number_format($dato->costo, 2) }}
+                                        S/
+                                        {{ number_format($dato->costo, 2) }}
                                     </td>
 
                                     <td>
@@ -211,13 +289,17 @@
                                     <td>
 
                                         @if($dato->activo)
+
                                             <span class="status-badge status-active">
                                                 Activo
                                             </span>
+
                                         @else
+
                                             <span class="status-badge status-inactive">
                                                 Inactivo
                                             </span>
+
                                         @endif
 
                                     </td>
@@ -231,21 +313,44 @@
                     </table>
 
 
-                {{-- INVENTARIO --}}
+                {{-- =================================================
+                     INVENTARIO
+                ================================================== --}}
 
                 @elseif($tipo === 'inventario')
 
-                    <table class="report-table">
+                    <table class="reports-table">
 
                         <thead>
+
                             <tr>
-                                <th>Producto</th>
-                                <th>Categoría</th>
-                                <th>Stock actual</th>
-                                <th>Stock mínimo</th>
-                                <th>Stock seguridad</th>
-                                <th>Estado</th>
+
+                                <th>
+                                    Producto
+                                </th>
+
+                                <th>
+                                    Categoría
+                                </th>
+
+                                <th>
+                                    Stock actual
+                                </th>
+
+                                <th>
+                                    Stock mínimo
+                                </th>
+
+                                <th>
+                                    Stock seguridad
+                                </th>
+
+                                <th>
+                                    Estado
+                                </th>
+
                             </tr>
+
                         </thead>
 
                         <tbody>
@@ -303,17 +408,28 @@
                     </table>
 
 
-                {{-- VENTAS --}}
+                {{-- =================================================
+                     VENTAS
+                ================================================== --}}
 
                 @elseif($tipo === 'ventas')
 
-                    <table class="report-table">
+                    <table class="reports-table">
 
                         <thead>
+
                             <tr>
-                                <th>Producto</th>
-                                <th>Cantidad vendida</th>
+
+                                <th>
+                                    Producto
+                                </th>
+
+                                <th>
+                                    Cantidad vendida
+                                </th>
+
                             </tr>
+
                         </thead>
 
                         <tbody>
@@ -342,17 +458,28 @@
                     </table>
 
 
-                {{-- DEMANDA --}}
+                {{-- =================================================
+                     DEMANDA
+                ================================================== --}}
 
                 @elseif($tipo === 'demanda')
 
-                    <table class="report-table">
+                    <table class="reports-table">
 
                         <thead>
+
                             <tr>
-                                <th>Fecha</th>
-                                <th>Demanda</th>
+
+                                <th>
+                                    Fecha
+                                </th>
+
+                                <th>
+                                    Demanda
+                                </th>
+
                             </tr>
+
                         </thead>
 
                         <tbody>
@@ -362,14 +489,22 @@
                                 <tr>
 
                                     <td>
-                                        {{ Carbon\Carbon::parse($dato->fecha)->locale('es')->translatedFormat('d \d\e F \d\e Y') }}
+
+                                        {{ Carbon\Carbon::parse($dato->fecha)
+                                            ->locale('es')
+                                            ->translatedFormat('d \d\e F \d\e Y')
+                                        }}
+
                                     </td>
 
                                     <td>
+
                                         <strong>
                                             {{ number_format($dato->cantidad) }}
                                         </strong>
+
                                         unidades
+
                                     </td>
 
                                 </tr>
@@ -381,19 +516,36 @@
                     </table>
 
 
-                {{-- PREDICCIONES --}}
+                {{-- =================================================
+                     PREDICCIONES
+                ================================================== --}}
 
                 @elseif($tipo === 'predicciones')
 
-                    <table class="report-table">
+                    <table class="reports-table">
 
                         <thead>
+
                             <tr>
-                                <th>Producto</th>
-                                <th>Stock actual</th>
-                                <th>Stock mínimo</th>
-                                <th>Stock seguridad</th>
+
+                                <th>
+                                    Producto
+                                </th>
+
+                                <th>
+                                    Stock actual
+                                </th>
+
+                                <th>
+                                    Stock mínimo
+                                </th>
+
+                                <th>
+                                    Stock seguridad
+                                </th>
+
                             </tr>
+
                         </thead>
 
                         <tbody>
@@ -428,15 +580,125 @@
 
                     </table>
 
+
+                {{-- =================================================
+                     ALERTAS
+                ================================================== --}}
+
+                @elseif($tipo === 'alertas')
+
+                    <table class="reports-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Tipo
+                                </th>
+
+                                <th>
+                                    Producto
+                                </th>
+
+                                <th>
+                                    Descripción
+                                </th>
+
+                                <th>
+                                    Estado
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            @foreach($datos as $dato)
+
+                                <tr>
+
+                                    <td>
+
+                                        @if(($dato->tipo ?? '') === 'critica')
+
+                                            <span class="status-badge status-danger">
+                                                Crítica
+                                            </span>
+
+                                        @elseif(($dato->tipo ?? '') === 'advertencia')
+
+                                            <span class="status-badge status-warning">
+                                                Advertencia
+                                            </span>
+
+                                        @else
+
+                                            <span class="status-badge status-info">
+                                                Informativa
+                                            </span>
+
+                                        @endif
+
+                                    </td>
+
+                                    <td>
+
+                                        <strong>
+                                            {{ $dato->producto ?? 'Sin producto' }}
+                                        </strong>
+
+                                    </td>
+
+                                    <td>
+                                        {{ $dato->descripcion ?? 'Sin descripción' }}
+                                    </td>
+
+                                    <td>
+
+                                        @if(($dato->estado ?? '') === 'atendida')
+
+                                            <span class="status-badge status-active">
+                                                Atendida
+                                            </span>
+
+                                        @else
+
+                                            <span class="status-badge status-danger">
+                                                Pendiente
+                                            </span>
+
+                                        @endif
+
+                                    </td>
+
+                                </tr>
+
+                            @endforeach
+
+                        </tbody>
+
+                    </table>
+
                 @endif
 
             </div>
 
+
         @else
 
-            <div class="analysis-empty">
+            {{-- =====================================================
+                 ESTADO VACÍO
+            ====================================================== --}}
 
-                <i class="bi bi-file-earmark-x"></i>
+            <div class="reports-empty">
+
+                <div class="reports-empty-icon">
+
+                    <i class="bi bi-file-earmark-x"></i>
+
+                </div>
 
                 <h3>
                     No hay datos disponibles
@@ -454,14 +716,18 @@
     </div>
 
 
-    {{-- PREDICCIONES --}}
+    {{-- =========================================================
+         INFORMACIÓN PARA PREDICCIONES
+    ========================================================== --}}
 
     @if($tipo === 'predicciones')
 
         <div class="reports-info">
 
             <div class="reports-info-icon">
+
                 <i class="bi bi-cpu"></i>
+
             </div>
 
             <div>
@@ -481,6 +747,7 @@
                     class="report-link"
                 >
                     Ir a predicción mensual
+
                     <i class="bi bi-arrow-right"></i>
                 </a>
 
