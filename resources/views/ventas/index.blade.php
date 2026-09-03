@@ -72,6 +72,16 @@
 
         </div>
 
+        <div>
+            <a
+                href="{{ route('ventas.create') }}"
+                class="sales-new-button"
+            >
+                <i class="bi bi-plus-lg"></i>
+                Nueva venta
+            </a>
+        </div>
+
     </header>
 
 

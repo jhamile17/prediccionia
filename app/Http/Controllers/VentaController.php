@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\DetalleVenta;
+use App\Models\MovimientoInventario;
+use App\Models\Producto;
 use App\Models\Venta;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class VentaController extends Controller
 {
@@ -35,17 +38,11 @@ class VentaController extends Controller
         */
 
         try {
-
             $fecha = Carbon::parse($fechaSeleccionada);
-
         } catch (\Throwable $e) {
-
             $fecha = Carbon::today();
-
-            $fechaSeleccionada =
-                $fecha->toDateString();
+            $fechaSeleccionada = $fecha->toDateString();
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -60,16 +57,13 @@ class VentaController extends Controller
                 'anulada',
             ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | CANTIDAD DE VENTAS
         |--------------------------------------------------------------------------
         */
 
-        $ventasHoy =
-            (clone $ventasDelDiaQuery)->count();
-
+        $ventasHoy = (clone $ventasDelDiaQuery)->count();
 
         /*
         |--------------------------------------------------------------------------
@@ -77,12 +71,9 @@ class VentaController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $ingresosHoy =
-            (float) (
-                (clone $ventasDelDiaQuery)
-                    ->sum('total')
-            );
-
+        $ingresosHoy = (float) (
+            (clone $ventasDelDiaQuery)->sum('total')
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -90,23 +81,16 @@ class VentaController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $unidadesHoy =
-            (int) DetalleVenta::query()
-                ->whereHas('venta', function ($query) use ($fecha) {
-
-                    $query
-                        ->whereDate(
-                            'fecha',
-                            $fecha->toDateString()
-                        )
-                        ->whereNotIn('estado', [
-                            'cancelada',
-                            'anulada',
-                        ]);
-
-                })
-                ->sum('cantidad');
-
+        $unidadesHoy = (int) DetalleVenta::query()
+            ->whereHas('venta', function ($query) use ($fecha) {
+                $query
+                    ->whereDate('fecha', $fecha->toDateString())
+                    ->whereNotIn('estado', [
+                        'cancelada',
+                        'anulada',
+                    ]);
+            })
+            ->sum('cantidad');
 
         /*
         |--------------------------------------------------------------------------
@@ -114,32 +98,23 @@ class VentaController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $productoMasVendido =
-            DetalleVenta::query()
-                ->select(
-                    'producto_id',
-                    DB::raw(
-                        'SUM(cantidad) as cantidad_total'
-                    )
-                )
-                ->whereHas('venta', function ($query) use ($fecha) {
-
-                    $query
-                        ->whereDate(
-                            'fecha',
-                            $fecha->toDateString()
-                        )
-                        ->whereNotIn('estado', [
-                            'cancelada',
-                            'anulada',
-                        ]);
-
-                })
-                ->with('producto')
-                ->groupBy('producto_id')
-                ->orderByDesc('cantidad_total')
-                ->first();
-
+        $productoMasVendido = DetalleVenta::query()
+            ->select(
+                'producto_id',
+                DB::raw('SUM(cantidad) as cantidad_total')
+            )
+            ->whereHas('venta', function ($query) use ($fecha) {
+                $query
+                    ->whereDate('fecha', $fecha->toDateString())
+                    ->whereNotIn('estado', [
+                        'cancelada',
+                        'anulada',
+                    ]);
+            })
+            ->with('producto')
+            ->groupBy('producto_id')
+            ->orderByDesc('cantidad_total')
+            ->first();
 
         /*
         |--------------------------------------------------------------------------
@@ -147,24 +122,22 @@ class VentaController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $ventas =
-            Venta::query()
-                ->with([
-                    'usuario',
-                    'detalles.producto',
-                ])
-                ->whereDate(
-                    'fecha',
-                    $fecha->toDateString()
-                )
-                ->whereNotIn('estado', [
-                    'cancelada',
-                    'anulada',
-                ])
-                ->orderByDesc('fecha')
-                ->limit(50)
-                ->get();
-
+        $ventas = Venta::query()
+            ->with([
+                'usuario',
+                'detalles.producto',
+            ])
+            ->whereDate(
+                'fecha',
+                $fecha->toDateString()
+            )
+            ->whereNotIn('estado', [
+                'cancelada',
+                'anulada',
+            ])
+            ->orderByDesc('fecha')
+            ->limit(50)
+            ->get();
 
         /*
         |--------------------------------------------------------------------------
@@ -172,14 +145,12 @@ class VentaController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $totalVentas =
-            Venta::query()
-                ->whereNotIn('estado', [
-                    'cancelada',
-                    'anulada',
-                ])
-                ->count();
-
+        $totalVentas = Venta::query()
+            ->whereNotIn('estado', [
+                'cancelada',
+                'anulada',
+            ])
+            ->count();
 
         /*
         |--------------------------------------------------------------------------
@@ -187,15 +158,11 @@ class VentaController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $esHoy =
-            $fecha->isToday();
+        $esHoy = $fecha->isToday();
 
-
-        $fechaTexto =
-            $esHoy
-                ? 'Hoy'
-                : $fecha->translatedFormat('d \d\e F \d\e Y');
-
+        $fechaTexto = $esHoy
+            ? 'Hoy'
+            : $fecha->translatedFormat('d \d\e F \d\e Y');
 
         /*
         |--------------------------------------------------------------------------
@@ -216,7 +183,7 @@ class VentaController extends Controller
 
             'producto_mas_vendido' =>
                 $productoMasVendido?->producto?->nombre
-                    ?? null,
+                ?? null,
 
             'cantidad_producto_mas_vendido' =>
                 (int) (
@@ -239,7 +206,6 @@ class VentaController extends Controller
 
         ];
 
-
         return view(
             'ventas.index',
             compact(
@@ -247,5 +213,274 @@ class VentaController extends Controller
                 'resumen'
             )
         );
+    }
+
+    /**
+     * =========================================================
+     * FORMULARIO DE NUEVA VENTA
+     * =========================================================
+     */
+    public function create()
+    {
+        $productos = Producto::query()
+            ->orderBy('nombre')
+            ->get();
+
+        return view(
+            'ventas.create',
+            compact('productos')
+        );
+    }
+
+    /**
+     * =========================================================
+     * REGISTRAR NUEVA VENTA
+     * =========================================================
+     */
+    public function store(Request $request)
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDACIÓN
+        |--------------------------------------------------------------------------
+        */
+
+        $datos = $request->validate([
+            'producto_id' => [
+                'required',
+                'integer',
+                'exists:productos,id',
+            ],
+
+            'cantidad' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:999',
+            ],
+        ], [
+            'producto_id.required' =>
+                'Selecciona un producto.',
+
+            'producto_id.exists' =>
+                'El producto seleccionado no existe.',
+
+            'cantidad.required' =>
+                'Ingresa la cantidad.',
+
+            'cantidad.integer' =>
+                'La cantidad debe ser un número entero.',
+
+            'cantidad.min' =>
+                'La cantidad debe ser como mínimo 1.',
+
+            'cantidad.max' =>
+                'La cantidad no puede ser mayor a 999.',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | TRANSACCIÓN
+        |--------------------------------------------------------------------------
+        */
+
+        try {
+
+            $resultado = DB::transaction(function () use ($datos) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | BLOQUEAR PRODUCTO
+                |--------------------------------------------------------------------------
+                */
+
+                $producto = Producto::query()
+                    ->lockForUpdate()
+                    ->findOrFail(
+                        $datos['producto_id']
+                    );
+
+                $cantidad = (int) $datos['cantidad'];
+
+                $stockAnterior = (int) $producto->stock;
+
+                /*
+                |--------------------------------------------------------------------------
+                | VALIDAR STOCK
+                |--------------------------------------------------------------------------
+                */
+
+                if ($stockAnterior < $cantidad) {
+
+                    throw ValidationException::withMessages([
+                        'cantidad' =>
+                            "No hay suficiente stock. " .
+                            "Stock disponible: {$stockAnterior} unidades."
+                    ]);
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | PRECIO DEL PRODUCTO
+                |--------------------------------------------------------------------------
+                */
+
+                $precioUnitario =
+                    (float) $producto->precio;
+
+                $subtotal =
+                    $precioUnitario * $cantidad;
+
+                /*
+                |--------------------------------------------------------------------------
+                | CREAR VENTA
+                |--------------------------------------------------------------------------
+                */
+
+                $venta = Venta::create([
+                    'usuario_id' =>
+                        auth()->id(),
+
+                    'fecha' =>
+                        now(),
+
+                    'total' =>
+                        $subtotal,
+
+                    'estado' =>
+                        'completada',
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | CREAR DETALLE
+                |--------------------------------------------------------------------------
+                */
+
+                $detalle = DetalleVenta::create([
+                    'venta_id' =>
+                        $venta->id,
+
+                    'producto_id' =>
+                        $producto->id,
+
+                    'cantidad' =>
+                        $cantidad,
+
+                    'precio_unitario' =>
+                        $precioUnitario,
+
+                    'subtotal' =>
+                        $subtotal,
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | ACTUALIZAR STOCK
+                |--------------------------------------------------------------------------
+                */
+
+                $stockNuevo =
+                    $stockAnterior - $cantidad;
+
+                $producto->update([
+                    'stock' => $stockNuevo,
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | REGISTRAR MOVIMIENTO DE INVENTARIO
+                |--------------------------------------------------------------------------
+                */
+
+                MovimientoInventario::create([
+                    'producto_id' =>
+                        $producto->id,
+
+                    'usuario_id' =>
+                        auth()->id(),
+
+                    'tipo' =>
+                        'salida',
+
+                    'cantidad' =>
+                        $cantidad,
+
+                    'stock_anterior' =>
+                        $stockAnterior,
+
+                    'stock_nuevo' =>
+                        $stockNuevo,
+
+                    'motivo' =>
+                        'Salida por venta #' . $venta->id,
+
+                    'fecha' =>
+                        now(),
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | RESULTADO
+                |--------------------------------------------------------------------------
+                */
+
+                return [
+                    'venta' =>
+                        $venta,
+
+                    'detalle' =>
+                        $detalle,
+
+                    'producto' =>
+                        $producto->fresh(),
+
+                    'stock_anterior' =>
+                        $stockAnterior,
+
+                    'stock_nuevo' =>
+                        $stockNuevo,
+
+                    'cantidad' =>
+                        $cantidad,
+
+                    'subtotal' =>
+                        $subtotal,
+                ];
+            });
+
+            /*
+            |--------------------------------------------------------------------------
+            | RESPUESTA
+            |--------------------------------------------------------------------------
+            */
+
+            return redirect()
+                ->route(
+                    'ventas.create'
+                )
+                ->with(
+                    'success',
+                    'Venta #' .
+                    $resultado['venta']->id .
+                    ' registrada correctamente.'
+                );
+
+        } catch (ValidationException $e) {
+
+            throw $e;
+
+        } catch (\Throwable $e) {
+
+            report($e);
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'No se pudo registrar la venta. ' .
+                    'Revisa los datos e inténtalo nuevamente.'
+                );
+        }
     }
 }
