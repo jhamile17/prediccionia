@@ -18,16 +18,23 @@ class AnalisisController extends Controller
 
         $productoId = $request->input('producto_id');
 
-        $periodo = $request->input('periodo', '30');
+        $periodo = $request->input(
+            'periodo',
+            '30'
+        );
 
 
         /*
         |--------------------------------------------------------------------------
-        | VALIDAR FILTROS
+        | VALIDAR PRODUCTO
         |--------------------------------------------------------------------------
         */
 
-        if ($productoId !== null && $productoId !== '') {
+        if (
+            $productoId !== null &&
+            $productoId !== ''
+        ) {
+
             $productoId = (int) $productoId;
 
             $existeProducto = DB::table('productos')
@@ -36,9 +43,19 @@ class AnalisisController extends Controller
                 ->exists();
 
             if (!$existeProducto) {
+
                 $productoId = null;
+
             }
+
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDAR PERÍODO
+        |--------------------------------------------------------------------------
+        */
 
         $periodosPermitidos = [
             '7',
@@ -47,8 +64,16 @@ class AnalisisController extends Controller
             '365',
         ];
 
-        if (!in_array($periodo, $periodosPermitidos, true)) {
+        if (
+            !in_array(
+                $periodo,
+                $periodosPermitidos,
+                true
+            )
+        ) {
+
             $periodo = '30';
+
         }
 
 
@@ -60,11 +85,13 @@ class AnalisisController extends Controller
 
         $dias = (int) $periodo;
 
-        $fechaFin = now()->endOfDay();
+        $fechaFin =
+            now()->endOfDay();
 
-        $fechaInicio = now()
-            ->subDays($dias - 1)
-            ->startOfDay();
+        $fechaInicio =
+            now()
+                ->subDays($dias - 1)
+                ->startOfDay();
 
 
         /*
@@ -73,108 +100,165 @@ class AnalisisController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $productos = DB::table('productos')
-            ->where('activo', 1)
-            ->orderBy('nombre')
-            ->get([
-                'id',
-                'nombre',
-            ]);
+        $productos =
+            DB::table('productos')
+                ->where('activo', 1)
+                ->orderBy('nombre')
+                ->get([
+                    'id',
+                    'nombre',
+                ]);
 
 
         /*
         |--------------------------------------------------------------------------
-        | VENTAS DIARIAS
+        | CONSULTA DE VENTAS
         |--------------------------------------------------------------------------
         */
 
-        $consulta = DB::table('detalle_ventas')
-            ->join(
-                'ventas',
-                'ventas.id',
-                '=',
-                'detalle_ventas.venta_id'
-            )
-            ->where(
-                'ventas.estado',
-                'completada'
-            )
-            ->whereBetween(
-                'ventas.fecha',
-                [
-                    $fechaInicio,
-                    $fechaFin,
-                ]
-            );
+        $consulta =
+            DB::table('detalle_ventas')
+                ->join(
+                    'ventas',
+                    'ventas.id',
+                    '=',
+                    'detalle_ventas.venta_id'
+                )
+                ->where(
+                    'ventas.estado',
+                    'completada'
+                )
+                ->whereBetween(
+                    'ventas.fecha',
+                    [
+                        $fechaInicio,
+                        $fechaFin,
+                    ]
+                );
+
 
         if ($productoId !== null) {
+
             $consulta->where(
                 'detalle_ventas.producto_id',
                 $productoId
             );
-        }
 
-        $ventasPorFecha = $consulta
-            ->selectRaw(
-                'DATE(ventas.fecha) as fecha'
-            )
-            ->selectRaw(
-                'SUM(detalle_ventas.cantidad) as cantidad'
-            )
-            ->groupBy(
-                DB::raw('DATE(ventas.fecha)')
-            )
-            ->orderBy('fecha')
-            ->get();
+        }
 
 
         /*
         |--------------------------------------------------------------------------
-        | CONSTRUIR TODOS LOS DÍAS
+        | VENTAS POR FECHA
         |--------------------------------------------------------------------------
-        |
-        | Es importante incluir los días sin ventas como 0.
-        | De esta forma el promedio y el gráfico representan
-        | realmente el período seleccionado.
-        |
+        */
+
+        $ventasPorFecha =
+            $consulta
+                ->selectRaw(
+                    'DATE(ventas.fecha) as fecha'
+                )
+                ->selectRaw(
+                    'SUM(detalle_ventas.cantidad) as cantidad'
+                )
+                ->groupBy(
+                    DB::raw(
+                        'DATE(ventas.fecha)'
+                    )
+                )
+                ->orderBy('fecha')
+                ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | MAPA DE VENTAS
+        |--------------------------------------------------------------------------
         */
 
         $ventasMap = [];
 
-        foreach ($ventasPorFecha as $venta) {
-            $ventasMap[$venta->fecha] = (int) $venta->cantidad;
-        }
 
+        foreach (
+            $ventasPorFecha
+            as $venta
+        ) {
 
-        $datosGrafico = [];
+            $ventasMap[$venta->fecha] =
+                (int) $venta->cantidad;
 
-        $fecha = $fechaInicio->copy();
-
-        while ($fecha->lte($fechaFin)) {
-
-            $fechaTexto = $fecha->toDateString();
-
-            $datosGrafico[] = [
-                'fecha' => $fechaTexto,
-                'cantidad' => $ventasMap[$fechaTexto] ?? 0,
-            ];
-
-            $fecha->addDay();
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | RESUMEN
+        | TODOS LOS DÍAS DEL PERÍODO
         |--------------------------------------------------------------------------
         */
 
-        $demandaTotal = collect($datosGrafico)
-            ->sum('cantidad');
+        $datosGrafico = [];
 
-        $demandaPromedio = $dias > 0
-            ? $demandaTotal / $dias
-            : 0;
+        $fecha =
+            $fechaInicio->copy();
+
+
+        while (
+            $fecha->lte($fechaFin)
+        ) {
+
+            $fechaTexto =
+                $fecha->toDateString();
+
+
+            $datosGrafico[] = [
+
+                'fecha' =>
+                    $fechaTexto,
+
+                'cantidad' =>
+                    $ventasMap[$fechaTexto] ?? 0,
+
+            ];
+
+
+            $fecha->addDay();
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | COLECCIÓN PARA CÁLCULOS
+        |--------------------------------------------------------------------------
+        */
+
+        $coleccionGrafico =
+            collect(
+                $datosGrafico
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DEMANDA TOTAL
+        |--------------------------------------------------------------------------
+        */
+
+        $demandaTotal =
+            (int) $coleccionGrafico
+                ->sum('cantidad');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DEMANDA PROMEDIO
+        |--------------------------------------------------------------------------
+        */
+
+        $demandaPromedio =
+            $dias > 0
+                ? $demandaTotal / $dias
+                : 0;
 
 
         /*
@@ -183,21 +267,37 @@ class AnalisisController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $diaMayor = collect($datosGrafico)
-            ->sortByDesc('cantidad')
-            ->first();
+        $diaMayor =
+            $coleccionGrafico
+                ->sortByDesc(
+                    'cantidad'
+                )
+                ->first();
+
 
         $fechaMayorDemanda = null;
+
         $cantidadMayorDemanda = 0;
 
-        if ($diaMayor && $diaMayor['cantidad'] > 0) {
 
-            $fechaMayorDemanda = Carbon::parse(
-                $diaMayor['fecha']
-            )->locale('es')->translatedFormat('d \d\e F');
+        if (
+            $diaMayor &&
+            (int) $diaMayor['cantidad'] > 0
+        ) {
+
+            $fechaMayorDemanda =
+                Carbon::parse(
+                    $diaMayor['fecha']
+                )
+                ->locale('es')
+                ->translatedFormat(
+                    'd \d\e F'
+                );
+
 
             $cantidadMayorDemanda =
-                $diaMayor['cantidad'];
+                (int) $diaMayor['cantidad'];
+
         }
 
 
@@ -207,47 +307,76 @@ class AnalisisController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $mitad = max(1, (int) floor($dias / 2));
+        $mitad =
+            max(
+                1,
+                (int) floor($dias / 2)
+            );
 
-        $primeraMitad = collect($datosGrafico)
-            ->take($mitad);
 
-        $segundaMitad = collect($datosGrafico)
-            ->slice($mitad);
+        $primeraMitad =
+            $coleccionGrafico
+                ->take($mitad);
+
+
+        $segundaMitad =
+            $coleccionGrafico
+                ->slice($mitad);
+
 
         $promedioPrimeraMitad =
-            $primeraMitad->avg('cantidad') ?? 0;
+            $primeraMitad
+                ->avg('cantidad')
+                ?? 0;
+
 
         $promedioSegundaMitad =
-            $segundaMitad->avg('cantidad') ?? 0;
+            $segundaMitad
+                ->avg('cantidad')
+                ?? 0;
 
 
         $tendenciaPorcentaje = 0;
 
-        if ($promedioPrimeraMitad > 0) {
+
+        if (
+            $promedioPrimeraMitad > 0
+        ) {
 
             $tendenciaPorcentaje =
                 (
                     (
                         $promedioSegundaMitad
-                        - $promedioPrimeraMitad
+                        -
+                        $promedioPrimeraMitad
                     )
-                    / $promedioPrimeraMitad
-                ) * 100;
+                    /
+                    $promedioPrimeraMitad
+                )
+                * 100;
+
         }
 
 
-        if ($tendenciaPorcentaje > 5) {
+        if (
+            $tendenciaPorcentaje > 5
+        ) {
 
-            $tendencia = 'Creciente';
+            $tendencia =
+                'Creciente';
 
-        } elseif ($tendenciaPorcentaje < -5) {
+        } elseif (
+            $tendenciaPorcentaje < -5
+        ) {
 
-            $tendencia = 'Decreciente';
+            $tendencia =
+                'Decreciente';
 
         } else {
 
-            $tendencia = 'Estable';
+            $tendencia =
+                'Estable';
+
         }
 
 
@@ -259,10 +388,17 @@ class AnalisisController extends Controller
 
         $productoSeleccionado = null;
 
-        if ($productoId !== null) {
 
-            $productoSeleccionado = $productos
-                ->firstWhere('id', $productoId);
+        if (
+            $productoId !== null
+        ) {
+
+            $productoSeleccionado =
+                $productos->firstWhere(
+                    'id',
+                    $productoId
+                );
+
         }
 
 
@@ -272,26 +408,154 @@ class AnalisisController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $principalesDias = collect($datosGrafico)
-            ->filter(function ($dato) {
-                return $dato['cantidad'] > 0;
-            })
-            ->sortByDesc('cantidad')
-            ->take(5)
-            ->values()
-            ->map(function ($dato) {
+        $principalesDias =
+            $coleccionGrafico
+                ->filter(
+                    function ($dato) {
 
-                return [
-                    'fecha' => Carbon::parse(
-                        $dato['fecha']
-                    )->locale('es')->translatedFormat(
-                        'd \d\e F'
+                        return
+                            (int) $dato['cantidad'] > 0;
+
+                    }
+                )
+                ->sortByDesc(
+                    'cantidad'
+                )
+                ->take(5)
+                ->values()
+                ->map(
+                    function ($dato) {
+
+                        return [
+
+                            'fecha' =>
+                                Carbon::parse(
+                                    $dato['fecha']
+                                )
+                                ->locale('es')
+                                ->translatedFormat(
+                                    'd \d\e F'
+                                ),
+
+                            'cantidad' =>
+                                (int) $dato['cantidad'],
+
+                        ];
+
+                    }
+                )
+                ->all();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | COMPORTAMIENTO POR DÍA DE LA SEMANA
+        |--------------------------------------------------------------------------
+        |
+        | Usamos un array normal porque vamos
+        | acumulando valores por día.
+        |
+        */
+
+        $diasSemana = [
+
+            1 => 'Lunes',
+            2 => 'Martes',
+            3 => 'Miércoles',
+            4 => 'Jueves',
+            5 => 'Viernes',
+            6 => 'Sábado',
+            7 => 'Domingo',
+
+        ];
+
+
+        $ventasPorDiaSemana = [
+
+            1 => [],
+            2 => [],
+            3 => [],
+            4 => [],
+            5 => [],
+            6 => [],
+            7 => [],
+
+        ];
+
+
+        foreach (
+            $datosGrafico
+            as $dato
+        ) {
+
+            $numeroDia =
+                Carbon::parse(
+                    $dato['fecha']
+                )->dayOfWeekIso;
+
+
+            $ventasPorDiaSemana[$numeroDia][] =
+                (int) $dato['cantidad'];
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESUMEN SEMANAL
+        |--------------------------------------------------------------------------
+        */
+
+        $comportamientoSemanal = [];
+
+
+        foreach (
+            $diasSemana
+            as $numero => $nombre
+        ) {
+
+            $valores =
+                collect(
+                    $ventasPorDiaSemana[$numero]
+                );
+
+
+            $comportamientoSemanal[] = [
+
+                'dia' =>
+                    $nombre,
+
+                'promedio' =>
+                    round(
+                        (float) (
+                            $valores->avg()
+                            ?? 0
+                        ),
+                        1
                     ),
 
-                    'cantidad' => $dato['cantidad'],
-                ];
-            })
-            ->all();
+                'total' =>
+                    (int) $valores->sum(),
+
+            ];
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DÍA CON MAYOR PROMEDIO
+        |--------------------------------------------------------------------------
+        */
+
+        $diaMayorPromedio =
+            collect(
+                $comportamientoSemanal
+            )
+            ->sortByDesc(
+                'promedio'
+            )
+            ->first();
 
 
         /*
@@ -300,13 +564,25 @@ class AnalisisController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $nombrePeriodo = match ($periodo) {
-            '7' => 'Últimos 7 días',
-            '30' => 'Últimos 30 días',
-            '90' => 'Últimos 90 días',
-            '365' => 'Último año',
-            default => 'Últimos 30 días',
-        };
+        $nombrePeriodo =
+            match ($periodo) {
+
+                '7' =>
+                    'Últimos 7 días',
+
+                '30' =>
+                    'Últimos 30 días',
+
+                '90' =>
+                    'Últimos 90 días',
+
+                '365' =>
+                    'Último año',
+
+                default =>
+                    'Últimos 30 días',
+
+            };
 
 
         /*
@@ -318,19 +594,37 @@ class AnalisisController extends Controller
         return view(
             'analisis.index',
             compact(
+
                 'productos',
+
                 'productoId',
+
                 'productoSeleccionado',
+
                 'periodo',
+
                 'nombrePeriodo',
+
                 'datosGrafico',
+
                 'demandaTotal',
+
                 'demandaPromedio',
+
                 'fechaMayorDemanda',
+
                 'cantidadMayorDemanda',
+
                 'tendencia',
+
                 'tendenciaPorcentaje',
-                'principalesDias'
+
+                'principalesDias',
+
+                'comportamientoSemanal',
+
+                'diaMayorPromedio'
+
             )
         );
     }

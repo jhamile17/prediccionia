@@ -110,10 +110,20 @@
                 <i class="bi bi-clipboard-data"></i>
                 <span>Inventario</span>
             </a>
+              <a
+                href="{{ route('ventas.index') }}"
+                class="menu-item {{ request()->routeIs('ventas.index')
+                    ? 'active'
+                    : ''
+                }}"
+            >
+                <i class="bi bi-receipt"></i>
+                <span>Ventas</span>
+            </a>
 
         </div>
 
-
+    
         {{-- =====================================================
              INTELIGENCIA
         ====================================================== --}}

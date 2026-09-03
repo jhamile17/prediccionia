@@ -1,384 +1,325 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard | PrediccionIA')
+@section('title', 'Inicio | PrediccionIA')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <link
+        rel="stylesheet"
+        href="{{ asset('css/dashboard.css') }}"
+    >
 @endpush
 
 @section('content')
 
 @php
 
-    /*
-    |--------------------------------------------------------------------------
-    | DATOS
-    |--------------------------------------------------------------------------
-    */
-
-    $resumenReposicion =
-        $dashboard['resumenReposicion'] ?? [];
-
-    /*
-    |--------------------------------------------------------------------------
-    | INDICADORES
-    |--------------------------------------------------------------------------
-    */
+    $totalProductos =
+        (int) ($dashboard['total_productos'] ?? 0);
 
     $reposicionInmediata =
-        (int) ($resumenReposicion['reposicion_inmediata'] ?? 0);
+        (int) ($dashboard['reposicion_inmediata'] ?? 0);
 
     $reposicionPronta =
-        (int) ($resumenReposicion['reposicion_pronta'] ?? 0);
+        (int) ($dashboard['reposicion_pronta'] ?? 0);
 
-    $stockSuficiente =
-        (int) ($resumenReposicion['stock_suficiente'] ?? 0);
-
-    $totalProductos =
-        (int) ($resumenReposicion['total_productos'] ?? 0);
-
-    /*
-    |--------------------------------------------------------------------------
-    | PRODUCTOS CRÍTICOS
-    |--------------------------------------------------------------------------
-    */
-
-    $productosCriticos =
-        $resumenReposicion['productos_criticos'] ?? [];
-
-    if (!is_iterable($productosCriticos)) {
-        $productosCriticos = [];
-    }
-
-    $productosCriticos =
-        is_array($productosCriticos)
-            ? $productosCriticos
-            : iterator_to_array($productosCriticos);
-
-    /*
-    |--------------------------------------------------------------------------
-    | PRODUCTOS PARA REVISAR
-    |--------------------------------------------------------------------------
-    */
-
-    $productosPorRevisar =
-        $resumenReposicion['productos_por_revisar'] ?? [];
-
-    if (!is_iterable($productosPorRevisar)) {
-        $productosPorRevisar = [];
-    }
-
-    $productosPorRevisar =
-        is_array($productosPorRevisar)
-            ? $productosPorRevisar
-            : iterator_to_array($productosPorRevisar);
-
-    /*
-    |--------------------------------------------------------------------------
-    | PRODUCTOS QUE NECESITAN ATENCIÓN
-    |--------------------------------------------------------------------------
-    */
-
-    $productosAtencion = collect(
-        array_merge(
-            $productosCriticos,
-            $productosPorRevisar
-        )
-    )->take(5);
-
-    /*
-    |--------------------------------------------------------------------------
-    | TOTAL DE ATENCIÓN
-    |--------------------------------------------------------------------------
-    */
+    $productosEstables =
+        (int) ($dashboard['productos_estables'] ?? 0);
 
     $totalAtencion =
-        $reposicionInmediata +
-        $reposicionPronta;
+        (int) ($dashboard['total_atencion'] ?? 0);
 
-    /*
-    |--------------------------------------------------------------------------
-    | SALUD DEL INVENTARIO
-    |--------------------------------------------------------------------------
-    */
+    $stockTotal =
+        (int) ($dashboard['stock_total'] ?? 0);
 
-    $porcentajeControl =
-        $totalProductos > 0
-            ? round(
-                ($stockSuficiente / $totalProductos) * 100
-            )
-            : 0;
+    $demandaHoy =
+        (int) ($dashboard['demanda_hoy'] ?? 0);
 
-    $porcentajeControl =
-        min(100, max(0, $porcentajeControl));
+    $faltanteTotal =
+        (int) ($dashboard['faltante_total'] ?? 0);
 
-    /*
-    |--------------------------------------------------------------------------
-    | FECHA
-    |--------------------------------------------------------------------------
-    */
+    $porcentajeEstable =
+        (int) ($dashboard['porcentaje_estable'] ?? 0);
 
-    $fechaActual =
-        now()->translatedFormat('d \d\e F \d\e Y');
+    $prioridades =
+        collect($dashboard['prioridades'] ?? []);
+
+    $productosRiesgo =
+        collect($dashboard['productos_riesgo'] ?? []);
+
+    $maxDemandaGrafico =
+        max(
+            1,
+            (int) ($dashboard['max_demanda_grafico'] ?? 1)
+        );
+
+    $estado =
+        $dashboard['estado'] ?? [];
+
+    $recomendacion =
+        $dashboard['recomendacion'] ?? [];
 
 @endphp
 
 
-<main class="dashboard">
-
+<main class="dashboard-page">
 
     {{-- =========================================================
-         ENCABEZADO
+         HEADER
     ========================================================== --}}
 
-    <section class="dashboard-hero">
+    <header class="dashboard-header">
 
-        <div class="hero-text">
+        <div class="dashboard-header-main">
 
-            <span class="hero-eyebrow">
-                PROCÁFES · PANEL DE CONTROL
+            <span class="dashboard-eyebrow">
+                CENTRO DE CONTROL
             </span>
 
             <h1>
-                Buenos días, Administrador
-                <span>👋</span>
+                {{ $dashboard['saludo'] ?? 'Hola' }},
+                Administrador
             </h1>
 
             <p>
-                Esto es lo más importante que debes revisar hoy.
+                Aquí tienes lo más importante para decidir qué hacer hoy.
             </p>
 
         </div>
 
-
-        <div class="hero-info">
+        <div class="dashboard-date">
 
             <span>
-                Actualizado
+                HOY
             </span>
 
             <strong>
-                {{ $fechaActual }}
+                {{ $dashboard['fecha_actual'] ?? '' }}
             </strong>
 
         </div>
 
-    </section>
-
+    </header>
 
 
     {{-- =========================================================
-         ESTADO GENERAL
+         ESTADO PRINCIPAL
     ========================================================== --}}
 
-    <section class="summary-section">
+    <section class="dashboard-status-card">
 
-        <div class="summary-heading">
+        <div class="status-card-content">
 
-            <div>
+            <div class="status-card-icon {{ $estado['clase'] ?? 'success' }}">
 
-                <span class="section-eyebrow">
-                    ESTADO GENERAL
-                </span>
+                @if(($estado['clase'] ?? '') === 'danger')
 
-                <h2>
-                    Tu inventario en un vistazo
-                </h2>
+                    <i class="bi bi-exclamation-lg"></i>
+
+                @elseif(($estado['clase'] ?? '') === 'warning')
+
+                    <i class="bi bi-eye"></i>
+
+                @else
+
+                    <i class="bi bi-check-lg"></i>
+
+                @endif
 
             </div>
 
+            <div>
 
-            @if($totalAtencion > 0)
+                <span class="dashboard-label">
+                    ESTADO DE HOY
+                </span>
 
-                <div class="summary-status warning">
+                <h2>
+                    {{ $estado['titulo'] ?? 'Inventario estable' }}
+                </h2>
 
-                    <i class="bi bi-exclamation-circle-fill"></i>
+                <p>
+                    {{ $estado['texto'] ?? '' }}
+                </p>
 
-                    <span>
-                        {{ $totalAtencion }}
-                        {{ $totalAtencion === 1
-                            ? 'producto necesita atención'
-                            : 'productos necesitan atención'
-                        }}
-                    </span>
-
-                </div>
-
-            @else
-
-                <div class="summary-status success">
-
-                    <i class="bi bi-check-circle-fill"></i>
-
-                    <span>
-                        Inventario estable
-                    </span>
-
-                </div>
-
-            @endif
+            </div>
 
         </div>
 
+        <div class="status-card-summary">
 
+            <strong>
+                {{ $porcentajeEstable }}%
+            </strong>
 
-        <div class="summary-grid">
-
-
-            {{-- REPOSICIÓN --}}
-
-            <article class="summary-card danger">
-
-                <div class="summary-card-top">
-
-                    <div class="summary-icon">
-                        <i class="bi bi-box-seam"></i>
-                    </div>
-
-                    <span class="summary-label">
-                        ACCIÓN
-                    </span>
-
-                </div>
-
-                <strong class="summary-number">
-                    {{ $reposicionInmediata }}
-                </strong>
-
-                <h3>
-                    Necesitan reposición
-                </h3>
-
-                <p>
-                    El stock no cubre la demanda esperada.
-                </p>
-
-            </article>
-
-
-
-            {{-- REVISAR --}}
-
-            <article class="summary-card warning">
-
-                <div class="summary-card-top">
-
-                    <div class="summary-icon">
-                        <i class="bi bi-clock"></i>
-                    </div>
-
-                    <span class="summary-label">
-                        VIGILAR
-                    </span>
-
-                </div>
-
-                <strong class="summary-number">
-                    {{ $reposicionPronta }}
-                </strong>
-
-                <h3>
-                    Revisar pronto
-                </h3>
-
-                <p>
-                    Están cerca del nivel mínimo.
-                </p>
-
-            </article>
-
-
-
-            {{-- BAJO CONTROL --}}
-
-            <article class="summary-card success">
-
-                <div class="summary-card-top">
-
-                    <div class="summary-icon">
-                        <i class="bi bi-check2"></i>
-                    </div>
-
-                    <span class="summary-label">
-                        ESTABLE
-                    </span>
-
-                </div>
-
-                <strong class="summary-number">
-                    {{ $stockSuficiente }}
-                </strong>
-
-                <h3>
-                    Bajo control
-                </h3>
-
-                <p>
-                    Tienen stock suficiente.
-                </p>
-
-            </article>
-
+            <span>
+                de los productos
+                bajo control
+            </span>
 
         </div>
 
     </section>
 
 
-
     {{-- =========================================================
-         CENTRO DE DECISIONES
+         INDICADORES RÁPIDOS
     ========================================================== --}}
 
-    <section class="decision-layout">
+    <section class="dashboard-metrics">
+
+        <article class="metric-card metric-danger">
+
+            <div class="metric-icon">
+
+                <i class="bi bi-exclamation-triangle"></i>
+
+            </div>
+
+            <div class="metric-content">
+
+                <span>
+                    Necesitan atención
+                </span>
+
+                <strong>
+                    {{ $reposicionInmediata }}
+                </strong>
+
+                <small>
+                    reposición prioritaria
+                </small>
+
+            </div>
+
+        </article>
+
+
+        <article class="metric-card metric-warning">
+
+            <div class="metric-icon">
+
+                <i class="bi bi-clock-history"></i>
+
+            </div>
+
+            <div class="metric-content">
+
+                <span>
+                    Para vigilar
+                </span>
+
+                <strong>
+                    {{ $reposicionPronta }}
+                </strong>
+
+                <small>
+                    cerca del nivel mínimo
+                </small>
+
+            </div>
+
+        </article>
+
+
+        <article class="metric-card metric-neutral">
+
+            <div class="metric-icon">
+
+                <i class="bi bi-box-seam"></i>
+
+            </div>
+
+            <div class="metric-content">
+
+                <span>
+                    Stock disponible
+                </span>
+
+                <strong>
+                    {{ number_format($stockTotal) }}
+                </strong>
+
+                <small>
+                    unidades en inventario
+                </small>
+
+            </div>
+
+        </article>
+
+
+        <article class="metric-card metric-purple">
+
+            <div class="metric-icon">
+
+                <i class="bi bi-graph-up-arrow"></i>
+
+            </div>
+
+            <div class="metric-content">
+
+                <span>
+                    Movimiento estimado
+                </span>
+
+                <strong>
+                    {{ number_format($demandaHoy) }}
+                </strong>
+
+                <small>
+                    unidades para hoy
+                </small>
+
+            </div>
+
+        </article>
+
+    </section>
+
+
+    {{-- =========================================================
+         PRIORIDADES + ESTADO
+    ========================================================== --}}
+
+    <section class="dashboard-main-grid">
 
 
         {{-- =====================================================
-             QUÉ HACER HOY
+             PRIORIDADES
         ====================================================== --}}
 
-        <article class="decision-card">
+        <article class="dashboard-panel priority-panel">
 
-            <header class="decision-header">
+            <header class="panel-header">
 
                 <div>
 
-                    <span class="section-eyebrow">
-                        ⚡ QUÉ HACER HOY
+                    <span class="dashboard-label">
+                        ACCIÓN RECOMENDADA
                     </span>
 
                     <h2>
-                        Productos que necesitan atención
+                        ¿Qué debo atender ahora?
                     </h2>
 
                     <p>
-                        Empieza por estos productos para reducir
-                        el riesgo de quedarte sin stock.
+                        Empieza por los productos con mayor riesgo
+                        de quedarse cortos.
                     </p>
 
                 </div>
 
-
                 @if($totalAtencion > 0)
 
-                    <span class="decision-total">
-
+                    <span class="panel-count danger">
                         {{ $totalAtencion }}
-
-                        {{ $totalAtencion === 1
-                            ? 'pendiente'
-                            : 'pendientes'
-                        }}
-
                     </span>
 
                 @else
 
-                    <span class="decision-ok">
+                    <span class="panel-check">
 
                         <i class="bi bi-check-circle-fill"></i>
-
-                        Todo bien
 
                     </span>
 
@@ -387,21 +328,13 @@
             </header>
 
 
+            @if($prioridades->count() > 0)
 
-            @if($productosAtencion->count() > 0)
+                <div class="priority-list">
 
-
-                <div class="decision-list">
-
-                    @foreach($productosAtencion as $indice => $producto)
+                    @foreach($prioridades as $indice => $producto)
 
                         @php
-
-                            $nivel =
-                                $producto['nivel'] ?? 'pronto';
-
-                            $esCritico =
-                                $nivel === 'inmediata';
 
                             $stock =
                                 (int) (
@@ -418,56 +351,59 @@
                                     $producto['faltante_estimado'] ?? 0
                                 );
 
-                            $minimo =
-                                (int) (
-                                    $producto['stock_minimo'] ?? 0
-                                );
+                            $nivel =
+                                $producto['nivel'] ?? 'pronto';
 
                         @endphp
 
 
-                        <div class="decision-item">
+                        <div class="priority-item">
 
+                            {{-- NÚMERO --}}
 
-                            <div class="decision-number
-                                {{ $esCritico ? 'danger' : 'warning' }}">
-
+                            <div class="priority-index
+                                {{ $nivel === 'inmediata'
+                                    ? 'danger'
+                                    : 'warning'
+                                }}"
+                            >
                                 {{ str_pad(
                                     $indice + 1,
                                     2,
                                     '0',
                                     STR_PAD_LEFT
                                 ) }}
-
                             </div>
 
 
+                            {{-- INFORMACIÓN --}}
 
-                            <div class="decision-product">
+                            <div class="priority-info">
 
-                                <div class="decision-product-title">
+                                <div class="priority-title-row">
 
                                     <strong>
                                         {{ $producto['producto'] ?? 'Producto' }}
                                     </strong>
 
-                                    @if($esCritico)
 
-                                        <span class="pill-danger">
+                                    @if($nivel === 'inmediata')
+
+                                        <span class="priority-badge danger">
 
                                             <i></i>
 
-                                            Reponer ahora
+                                            Atención ahora
 
                                         </span>
 
                                     @else
 
-                                        <span class="pill-warning">
+                                        <span class="priority-badge warning">
 
                                             <i></i>
 
-                                            Revisar pronto
+                                            Vigilar
 
                                         </span>
 
@@ -476,123 +412,102 @@
                                 </div>
 
 
-                                <p>
+                                <span class="priority-description">
 
-                                    @if($esCritico)
+                                    @if($nivel === 'inmediata')
 
-                                        Tu stock no alcanza para cubrir
-                                        la demanda esperada.
+                                        El stock disponible no alcanza
+                                        para cubrir el movimiento esperado.
 
                                     @else
 
-                                        Tu stock está cerca del nivel mínimo.
+                                        El producto está cerca de su
+                                        nivel mínimo.
 
                                     @endif
 
-                                </p>
+                                </span>
+
+
+                                <div class="priority-numbers">
+
+                                    <span>
+
+                                        Stock
+
+                                        <strong>
+                                            {{ $stock }}
+                                        </strong>
+
+                                    </span>
+
+
+                                    <span>
+
+                                        Esperado
+
+                                        <strong>
+                                            {{ $demanda }}
+                                        </strong>
+
+                                    </span>
+
+
+                                    @if($faltante > 0)
+
+                                        <span class="priority-shortage">
+
+                                            Faltan
+
+                                            <strong>
+                                                {{ $faltante }}
+                                            </strong>
+
+                                        </span>
+
+                                    @endif
+
+                                </div>
 
                             </div>
 
 
+                            {{-- =================================================
+                                 ACCIÓN
+                            ================================================== --}}
 
-                            <div class="decision-data">
+                            @if($nivel === 'inmediata')
 
+                                <button
+                                    type="button"
+                                    class="priority-action danger js-open-reposition"
+                                    data-producto-id="{{ $producto['producto_id'] ?? '' }}"
+                                    data-producto="{{ $producto['producto'] ?? 'Producto' }}"
+                                    data-stock="{{ $stock }}"
+                                    data-demanda="{{ $demanda }}"
+                                    data-faltante="{{ $faltante }}"
+                                >
 
-                                <div>
+                                    Reponer
 
-                                    <span>
-                                        Tienes
-                                    </span>
+                                    <i class="bi bi-arrow-right"></i>
 
-                                    <strong>
-                                        {{ $stock }}
-                                    </strong>
+                                </button>
 
-                                    <small>
-                                        unidades
-                                    </small>
+                            @else
 
-                                </div>
+                                <a
+                                    href="{{ route('inventario.index') }}"
+                                    class="priority-action warning"
+                                >
 
+                                    Revisar
 
-                                <div>
+                                    <i class="bi bi-arrow-right"></i>
 
-                                    <span>
-                                        Se esperan vender
-                                    </span>
+                                </a>
 
-                                    <strong>
-                                        {{ $demanda }}
-                                    </strong>
-
-                                    <small>
-                                        unidades
-                                    </small>
-
-                                </div>
-
-
-                                @if($esCritico)
-
-                                    <div class="decision-shortage">
-
-                                        <span>
-                                            Te faltarían
-                                        </span>
-
-                                        <strong>
-                                            {{ $faltante }}
-                                        </strong>
-
-                                        <small>
-                                            unidades
-                                        </small>
-
-                                    </div>
-
-                                @else
-
-                                    <div>
-
-                                        <span>
-                                            Nivel mínimo
-                                        </span>
-
-                                        <strong>
-                                            {{ $minimo }}
-                                        </strong>
-
-                                        <small>
-                                            unidades
-                                        </small>
-
-                                    </div>
-
-                                @endif
-
-
-                            </div>
-
-
-
-                            <a
-                                href="{{ route('inventario.index') }}"
-                                class="decision-button
-                                    {{ $esCritico
-                                        ? 'button-danger'
-                                        : 'button-warning'
-                                    }}"
-                            >
-
-                                {{ $esCritico
-                                    ? 'Reponer'
-                                    : 'Revisar'
-                                }}
-
-                                <i class="bi bi-arrow-right"></i>
-
-                            </a>
-
+                            @endif
 
                         </div>
 
@@ -600,89 +515,124 @@
 
                 </div>
 
-
             @else
 
+                <div class="dashboard-empty">
 
-                <div class="empty-decision">
+                    <div class="dashboard-empty-icon">
 
-                    <div class="empty-decision-icon">
-
-                        <i class="bi bi-check-lg"></i>
+                        <i class="bi bi-check2-circle"></i>
 
                     </div>
 
                     <h3>
-                        Todo está bajo control
+                        No hay tareas urgentes
                     </h3>
 
                     <p>
-                        No necesitas reponer productos por ahora.
+                        El inventario puede continuar con normalidad.
                     </p>
 
                 </div>
 
-
             @endif
-
 
         </article>
 
 
-
         {{-- =====================================================
-             RECOMENDACIÓN
+             DONUT
         ====================================================== --}}
 
-        <aside class="recommendation-card">
+        <article class="dashboard-panel health-panel">
 
-            <div class="recommendation-orb">
+            <header class="panel-header">
 
-                <i class="bi bi-lightbulb"></i>
+                <div>
+
+                    <span class="dashboard-label">
+                        EN UNA MIRADA
+                    </span>
+
+                    <h2>
+                        Estado del inventario
+                    </h2>
+
+                </div>
+
+            </header>
+
+
+            @php
+
+                $porcentajeDanger =
+                    $totalProductos > 0
+                        ? round(
+                            (
+                                $reposicionInmediata /
+                                $totalProductos
+                            ) * 100
+                        )
+                        : 0;
+
+                $porcentajeWarning =
+                    $totalProductos > 0
+                        ? round(
+                            (
+                                $reposicionPronta /
+                                $totalProductos
+                            ) * 100
+                        )
+                        : 0;
+
+            @endphp
+
+
+            <div class="health-visual">
+
+                <div
+                    class="health-donut"
+                    style="
+                        background:
+                            conic-gradient(
+                                #16a34a 0 {{ $porcentajeEstable }}%,
+                                #f59e0b {{ $porcentajeEstable }}% {{ $porcentajeEstable + $porcentajeWarning }}%,
+                                #ef4444 {{ $porcentajeEstable + $porcentajeWarning }}% 100%
+                            );
+                    "
+                >
+
+                    <div class="health-donut-center">
+
+                        <strong>
+                            {{ $totalProductos }}
+                        </strong>
+
+                        <span>
+                            productos
+                        </span>
+
+                    </div>
+
+                </div>
 
             </div>
 
 
-            <span class="recommendation-label">
-                RECOMENDACIÓN
-            </span>
+            <div class="health-legend">
 
+                <div>
 
-            @if($reposicionInmediata > 0)
-
-
-                <h2>
-                    Prioriza los productos en rojo.
-                </h2>
-
-                <p>
-                    Hay
-                    <strong>
-                        {{ $reposicionInmediata }}
-                    </strong>
-
-                    {{ $reposicionInmediata === 1
-                        ? 'producto'
-                        : 'productos'
-                    }}
-
-                    cuyo stock no cubre la demanda esperada.
-                </p>
-
-
-                <div class="recommendation-box danger">
-
-                    <i class="bi bi-arrow-up-right"></i>
+                    <span class="legend-dot stable"></span>
 
                     <div>
 
                         <strong>
-                            Qué hacer
+                            {{ $productosEstables }}
                         </strong>
 
                         <span>
-                            Revisa primero estos productos
-                            y registra la reposición.
+                            bajo control
                         </span>
 
                     </div>
@@ -690,63 +640,263 @@
                 </div>
 
 
+                <div>
+
+                    <span class="legend-dot warning"></span>
+
+                    <div>
+
+                        <strong>
+                            {{ $reposicionPronta }}
+                        </strong>
+
+                        <span>
+                            para vigilar
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div>
+
+                    <span class="legend-dot danger"></span>
+
+                    <div>
+
+                        <strong>
+                            {{ $reposicionInmediata }}
+                        </strong>
+
+                        <span>
+                            requieren acción
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </article>
+
+    </section>
+
+
+    {{-- =========================================================
+         GRÁFICO DE PRESIÓN DE STOCK
+    ========================================================== --}}
+
+    <section class="dashboard-panel pressure-panel">
+
+        <header class="panel-header pressure-header">
+
+            <div>
+
+                <span class="dashboard-label">
+                    PRESIÓN DE STOCK
+                </span>
+
+                <h2>
+                    ¿Dónde puede aparecer el próximo faltante?
+                </h2>
+
+                <p>
+                    Compara el movimiento esperado con las unidades
+                    que tienes disponibles hoy.
+                </p>
+
+            </div>
+
+
+            <a
+                href="{{ route('inventario.index') }}"
+                class="panel-link"
+            >
+
+                Ver inventario
+
+                <i class="bi bi-arrow-right"></i>
+
+            </a>
+
+        </header>
+
+
+        <div class="pressure-list">
+
+            @foreach($productosRiesgo as $producto)
+
+                @php
+
+                    $stock =
+                        (int) (
+                            $producto['stock_actual'] ?? 0
+                        );
+
+                    $demanda =
+                        (int) (
+                            $producto['demanda_predicha'] ?? 0
+                        );
+
+                    $faltante =
+                        (int) (
+                            $producto['faltante_estimado'] ?? 0
+                        );
+
+                    $stockWidth =
+                        min(
+                            100,
+                            round(
+                                ($stock / $maxDemandaGrafico) * 100
+                            )
+                        );
+
+                    $demandaWidth =
+                        min(
+                            100,
+                            round(
+                                ($demanda / $maxDemandaGrafico) * 100
+                            )
+                        );
+
+                @endphp
+
+
+                <div class="pressure-row">
+
+                    <div class="pressure-name">
+
+                        <strong>
+                            {{ $producto['producto'] ?? 'Producto' }}
+                        </strong>
+
+
+                        @if($faltante > 0)
+
+                            <span class="pressure-risk">
+                                Faltan {{ $faltante }}
+                            </span>
+
+                        @else
+
+                            <span class="pressure-ok">
+                                Cubierto
+                            </span>
+
+                        @endif
+
+                    </div>
+
+
+                    <div class="pressure-bars">
+
+                        <div class="pressure-line">
+
+                            <span class="pressure-line-label">
+                                Esperado
+                            </span>
+
+                            <div class="pressure-track">
+
+                                <span
+                                    class="pressure-bar expected"
+                                    style="width: {{ $demandaWidth }}%"
+                                ></span>
+
+                            </div>
+
+                            <strong>
+                                {{ $demanda }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="pressure-line">
+
+                            <span class="pressure-line-label">
+                                Disponible
+                            </span>
+
+                            <div class="pressure-track">
+
+                                <span
+                                    class="pressure-bar available
+                                        {{ $faltante > 0 ? 'low' : '' }}"
+                                    style="width: {{ $stockWidth }}%"
+                                ></span>
+
+                            </div>
+
+                            <strong>
+                                {{ $stock }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @endforeach
+
+        </div>
+
+    </section>
+
+
+    {{-- =========================================================
+         RECOMENDACIÓN
+    ========================================================== --}}
+
+    <section class="dashboard-recommendation">
+
+        <div class="recommendation-symbol">
+
+            <i class="bi bi-stars"></i>
+
+        </div>
+
+
+        <div class="recommendation-content">
+
+            <span class="dashboard-label">
+                RECOMENDACIÓN DEL SISTEMA
+            </span>
+
+            <h2>
+                {{ $recomendacion['titulo'] ?? '' }}
+            </h2>
+
+            <p>
+                {{ $recomendacion['texto'] ?? '' }}
+            </p>
+
+        </div>
+
+
+        <div class="recommendation-action">
+
+            @if(($recomendacion['nivel'] ?? '') === 'danger')
+
                 <a
                     href="{{ route('inventario.index') }}"
-                    class="recommendation-button"
+                    class="recommendation-button danger"
                 >
 
-                    Ir a inventario
+                    Revisar ahora
 
                     <i class="bi bi-arrow-right"></i>
 
                 </a>
 
-
-            @elseif($reposicionPronta > 0)
-
-
-                <h2>
-                    Mantén estos productos vigilados.
-                </h2>
-
-                <p>
-                    Hay
-                    <strong>
-                        {{ $reposicionPronta }}
-                    </strong>
-
-                    {{ $reposicionPronta === 1
-                        ? 'producto'
-                        : 'productos'
-                    }}
-
-                    cerca de su nivel mínimo.
-                </p>
-
-
-                <div class="recommendation-box warning">
-
-                    <i class="bi bi-clock"></i>
-
-                    <div>
-
-                        <strong>
-                            Qué hacer
-                        </strong>
-
-                        <span>
-                            Revisa su stock antes de que
-                            necesiten reposición.
-                        </span>
-
-                    </div>
-
-                </div>
-
+            @elseif(($recomendacion['nivel'] ?? '') === 'warning')
 
                 <a
                     href="{{ route('inventario.index') }}"
-                    class="recommendation-button"
+                    class="recommendation-button warning"
                 >
 
                     Revisar inventario
@@ -755,128 +905,863 @@
 
                 </a>
 
-
             @else
 
+                <a
+                    href="{{ route('inventario.index') }}"
+                    class="recommendation-button"
+                >
 
-                <h2>
-                    Puedes continuar con normalidad.
-                </h2>
+                    Ver inventario
 
-                <p>
-                    No se identifican productos que
-                    necesiten una acción inmediata.
-                </p>
+                    <i class="bi bi-arrow-right"></i>
+
+                </a>
+
+            @endif
+
+        </div>
+
+    </section>
 
 
-                <div class="recommendation-box success">
+    {{-- =========================================================
+         PIE
+    ========================================================== --}}
 
-                    <i class="bi bi-check-circle"></i>
+    <div class="dashboard-footer-note">
 
-                    <div>
+        <i class="bi bi-info-circle"></i>
 
-                        <strong>
-                            Inventario estable
-                        </strong>
+        <span>
+            Las recomendaciones se basan en el stock disponible
+            y en la demanda estimada para hoy.
+        </span>
 
-                        <span>
-                            El stock disponible está bajo control.
-                        </span>
+    </div>
 
-                    </div>
+</main>
+
+
+{{-- =============================================================
+     MODAL DE REPOSICIÓN
+============================================================= --}}
+
+<div
+    class="reposition-modal"
+    id="repositionModal"
+    aria-hidden="true"
+>
+
+    <div class="reposition-modal-backdrop"></div>
+
+
+    <div
+        class="reposition-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="repositionModalTitle"
+    >
+
+        {{-- CERRAR --}}
+
+        <button
+            type="button"
+            class="reposition-close"
+            id="repositionClose"
+            aria-label="Cerrar"
+        >
+
+            <i class="bi bi-x-lg"></i>
+
+        </button>
+
+
+        {{-- ICONO --}}
+
+        <div class="reposition-icon">
+
+            <i class="bi bi-box-arrow-in-down"></i>
+
+        </div>
+
+
+        <span class="dashboard-label">
+            REPOSICIÓN SUGERIDA
+        </span>
+
+
+        <h2 id="repositionModalTitle">
+            Reponer producto
+        </h2>
+
+
+        <p class="reposition-description">
+
+            El sistema detectó que el stock actual no cubre
+            la demanda estimada.
+
+        </p>
+
+
+        {{-- RESUMEN --}}
+
+        <div class="reposition-summary">
+
+            <div>
+
+                <span>
+                    Stock actual
+                </span>
+
+                <strong id="repositionStock">
+                    0
+                </strong>
+
+                <small>
+                    unidades
+                </small>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Demanda estimada
+                </span>
+
+                <strong id="repositionDemand">
+                    0
+                </strong>
+
+                <small>
+                    unidades
+                </small>
+
+            </div>
+
+
+            <div class="highlight">
+
+                <span>
+                    Faltante estimado
+                </span>
+
+                <strong id="repositionShortage">
+                    0
+                </strong>
+
+                <small>
+                    unidades
+                </small>
+
+            </div>
+
+        </div>
+
+
+        {{-- FORMULARIO --}}
+
+        <form
+            id="repositionForm"
+            method="POST"
+            action="{{ route('inventario.movimiento.store') }}"
+        >
+
+            @csrf
+
+
+            <input
+                type="hidden"
+                name="producto_id"
+                id="repositionProductId"
+            >
+
+
+            <input
+                type="hidden"
+                name="tipo"
+                value="reposicion"
+            >
+
+
+            <div class="reposition-field">
+
+                <label for="repositionQuantity">
+                    Cantidad a reponer
+                </label>
+
+
+                <div class="reposition-input-wrapper">
+
+                    <input
+                        type="number"
+                        name="cantidad"
+                        id="repositionQuantity"
+                        min="1"
+                        step="1"
+                        required
+                    >
+
+                    <span>
+                        unidades
+                    </span>
 
                 </div>
 
 
-            @endif
+                <small>
 
+                    La cantidad sugerida se calcula a partir
+                    del faltante estimado.
 
-        </aside>
-
-
-    </section>
-
-
-
-    {{-- =========================================================
-         SALUD DEL INVENTARIO
-    ========================================================== --}}
-
-    <section class="health-card">
-
-
-        <div class="health-content">
-
-            <span class="section-eyebrow">
-                SALUD DEL INVENTARIO
-            </span>
-
-            <h2>
-                {{ $porcentajeControl }}% bajo control
-            </h2>
-
-            <p>
-                {{ $stockSuficiente }}
-                de
-                {{ $totalProductos }}
-                productos tienen stock suficiente.
-            </p>
-
-        </div>
-
-
-        <div class="health-progress">
-
-            <div class="health-top">
-
-                <span>
-                    Estado actual
-                </span>
-
-                <strong>
-                    {{ $porcentajeControl }}%
-                </strong>
+                </small>
 
             </div>
 
 
-            <div class="health-track">
+            <div class="reposition-note">
 
-                <span
-                    style="width: {{ $porcentajeControl }}%"
-                ></span>
-
-            </div>
-
-
-            <div class="health-legend">
+                <i class="bi bi-info-circle"></i>
 
                 <span>
-                    <i class="green"></i>
-                    {{ $stockSuficiente }}
-                    bajo control
-                </span>
 
-                <span>
-                    <i class="red"></i>
-                    {{ $reposicionInmediata }}
-                    necesitan reposición
-                </span>
+                    La reposición solo se realizará después
+                    de tu confirmación.
 
-                <span>
-                    <i class="orange"></i>
-                    {{ $reposicionPronta }}
-                    por revisar
                 </span>
 
             </div>
 
-        </div>
+
+            <div
+                class="reposition-error"
+                id="repositionError"
+            ></div>
 
 
-    </section>
+            <div class="reposition-actions">
+
+                <button
+                    type="button"
+                    class="reposition-cancel"
+                    id="repositionCancel"
+                >
+                    Cancelar
+                </button>
 
 
-</main>
+                <button
+                    type="submit"
+                    class="reposition-confirm"
+                    id="repositionConfirm"
+                >
+
+                    <span class="reposition-confirm-text">
+                        Confirmar reposición
+                    </span>
+
+
+                    <span
+                        class="reposition-loading"
+                        hidden
+                    >
+                        Procesando...
+                    </span>
+
+
+                    <i class="bi bi-check-lg"></i>
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+{{-- =============================================================
+     NOTIFICACIÓN DE ÉXITO
+============================================================= --}}
+
+<div
+    class="dashboard-toast"
+    id="dashboardToast"
+    aria-hidden="true"
+>
+
+    <div class="dashboard-toast-icon">
+
+        <i class="bi bi-check-lg"></i>
+
+    </div>
+
+
+    <div>
+
+        <strong id="toastTitle">
+            Reposición registrada
+        </strong>
+
+        <span id="toastMessage">
+            El inventario ha sido actualizado.
+        </span>
+
+    </div>
+
+</div>
 
 @endsection
+
+
+{{-- =============================================================
+     JAVASCRIPT
+============================================================= --}}
+
+@push('scripts')
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    /*
+     * ==========================================================
+     * ELEMENTOS
+     * ==========================================================
+     */
+
+    const modal =
+        document.getElementById('repositionModal');
+
+    const form =
+        document.getElementById('repositionForm');
+
+    const closeButton =
+        document.getElementById('repositionClose');
+
+    const cancelButton =
+        document.getElementById('repositionCancel');
+
+    const productIdInput =
+        document.getElementById('repositionProductId');
+
+    const quantityInput =
+        document.getElementById('repositionQuantity');
+
+    const stockElement =
+        document.getElementById('repositionStock');
+
+    const demandElement =
+        document.getElementById('repositionDemand');
+
+    const shortageElement =
+        document.getElementById('repositionShortage');
+
+    const titleElement =
+        document.getElementById('repositionModalTitle');
+
+    const errorElement =
+        document.getElementById('repositionError');
+
+    const confirmButton =
+        document.getElementById('repositionConfirm');
+
+    const confirmText =
+        document.querySelector('.reposition-confirm-text');
+
+    const loadingText =
+        document.querySelector('.reposition-loading');
+
+    const toast =
+        document.getElementById('dashboardToast');
+
+    const toastTitle =
+        document.getElementById('toastTitle');
+
+    const toastMessage =
+        document.getElementById('toastMessage');
+
+
+    /*
+     * ==========================================================
+     * VALIDAR QUE EXISTAN LOS ELEMENTOS
+     * ==========================================================
+     */
+
+    if (
+        !modal ||
+        !form ||
+        !closeButton ||
+        !cancelButton ||
+        !productIdInput ||
+        !quantityInput
+    ) {
+
+        console.error(
+            'Dashboard: no se encontraron los elementos del modal de reposición.'
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * ==========================================================
+     * ABRIR MODAL
+     * ==========================================================
+     */
+
+    document
+        .querySelectorAll('.js-open-reposition')
+        .forEach(function (button) {
+
+            button.addEventListener(
+                'click',
+                function () {
+
+                    const productoId =
+                        this.dataset.productoId || '';
+
+                    const producto =
+                        this.dataset.producto || 'Producto';
+
+                    const stock =
+                        Number(
+                            this.dataset.stock || 0
+                        );
+
+                    const demanda =
+                        Number(
+                            this.dataset.demanda || 0
+                        );
+
+                    const faltante =
+                        Number(
+                            this.dataset.faltante || 0
+                        );
+
+
+                    /*
+                     * Datos del producto
+                     */
+
+                    productIdInput.value =
+                        productoId;
+
+                    titleElement.textContent =
+                        'Reponer ' + producto;
+
+                    stockElement.textContent =
+                        stock;
+
+                    demandElement.textContent =
+                        demanda;
+
+                    shortageElement.textContent =
+                        faltante;
+
+
+                    /*
+                     * Cantidad sugerida
+                     */
+
+                    quantityInput.value =
+                        Math.max(
+                            1,
+                            faltante
+                        );
+
+                    quantityInput.max =
+                        9999;
+
+
+                    /*
+                     * Limpiar errores
+                     */
+
+                    errorElement.textContent =
+                        '';
+
+                    errorElement.classList.remove(
+                        'visible'
+                    );
+
+
+                    /*
+                     * Abrir
+                     */
+
+                    modal.classList.add(
+                        'is-open'
+                    );
+
+                    modal.setAttribute(
+                        'aria-hidden',
+                        'false'
+                    );
+
+                    document.body.classList.add(
+                        'modal-open-dashboard'
+                    );
+
+
+                    /*
+                     * Enfocar cantidad
+                     */
+
+                    setTimeout(
+                        function () {
+
+                            quantityInput.focus();
+
+                            quantityInput.select();
+
+                        },
+                        100
+                    );
+
+                }
+            );
+
+        });
+
+
+    /*
+     * ==========================================================
+     * CERRAR MODAL
+     * ==========================================================
+     */
+
+    function cerrarModal() {
+
+        modal.classList.remove(
+            'is-open'
+        );
+
+        modal.setAttribute(
+            'aria-hidden',
+            'true'
+        );
+
+        document.body.classList.remove(
+            'modal-open-dashboard'
+        );
+
+        errorElement.textContent =
+            '';
+
+        errorElement.classList.remove(
+            'visible'
+        );
+
+    }
+
+
+    /*
+     * BOTÓN X
+     */
+
+    closeButton.addEventListener(
+        'click',
+        cerrarModal
+    );
+
+
+    /*
+     * BOTÓN CANCELAR
+     */
+
+    cancelButton.addEventListener(
+        'click',
+        cerrarModal
+    );
+
+
+    /*
+     * FONDO
+     */
+
+    const backdrop =
+        modal.querySelector(
+            '.reposition-modal-backdrop'
+        );
+
+    if (backdrop) {
+
+        backdrop.addEventListener(
+            'click',
+            cerrarModal
+        );
+
+    }
+
+
+    /*
+     * ESC
+     */
+
+    document.addEventListener(
+        'keydown',
+        function (event) {
+
+            if (
+                event.key === 'Escape' &&
+                modal.classList.contains('is-open')
+            ) {
+
+                cerrarModal();
+
+            }
+
+        }
+    );
+
+
+    /*
+     * ==========================================================
+     * ENVIAR REPOSICIÓN
+     * ==========================================================
+     */
+
+    form.addEventListener(
+        'submit',
+        async function (event) {
+
+            event.preventDefault();
+
+
+            const cantidad =
+                Number(
+                    quantityInput.value || 0
+                );
+
+            const productoId =
+                productIdInput.value;
+
+
+            /*
+             * VALIDAR
+             */
+
+            if (
+                !productoId ||
+                cantidad < 1 ||
+                !Number.isInteger(cantidad)
+            ) {
+
+                errorElement.textContent =
+                    'Ingresa una cantidad válida.';
+
+                errorElement.classList.add(
+                    'visible'
+                );
+
+                return;
+
+            }
+
+
+            /*
+             * BLOQUEAR BOTÓN
+             */
+
+            confirmButton.disabled =
+                true;
+
+            confirmText.hidden =
+                true;
+
+            loadingText.hidden =
+                false;
+
+
+            errorElement.textContent =
+                '';
+
+            errorElement.classList.remove(
+                'visible'
+            );
+
+
+            try {
+
+                /*
+                 * Crear datos
+                 */
+
+                const formData =
+                    new FormData(form);
+
+
+                /*
+                 * Token CSRF
+                 */
+
+                const csrfInput =
+                    form.querySelector(
+                        'input[name="_token"]'
+                    );
+
+                const csrfToken =
+                    csrfInput
+                        ? csrfInput.value
+                        : '';
+
+
+                /*
+                 * Petición
+                 */
+
+                const response =
+                    await fetch(
+                        form.action,
+                        {
+                            method: 'POST',
+
+                            headers: {
+
+                                'Accept':
+                                    'application/json',
+
+                                'X-Requested-With':
+                                    'XMLHttpRequest',
+
+                                'X-CSRF-TOKEN':
+                                    csrfToken
+
+                            },
+
+                            body: formData
+
+                        }
+                    );
+
+
+                /*
+                 * Leer respuesta
+                 */
+
+                let data;
+
+                try {
+
+                    data =
+                        await response.json();
+
+                } catch (jsonError) {
+
+                    throw new Error(
+                        'El servidor devolvió una respuesta no válida.'
+                    );
+
+                }
+
+
+                /*
+                 * Verificar resultado
+                 */
+
+                if (
+                    !response.ok ||
+                    !data.success
+                ) {
+
+                    throw new Error(
+                        data.message ||
+                        'No se pudo registrar la reposición.'
+                    );
+
+                }
+
+
+                /*
+                 * Cerrar modal
+                 */
+
+                cerrarModal();
+
+
+                /*
+                 * Mostrar éxito
+                 */
+
+                toastTitle.textContent =
+                    'Reposición registrada';
+
+                toastMessage.textContent =
+                    `${data.cantidad} unidades agregadas. ` +
+                    `Nuevo stock: ${data.stock_nuevo}.`;
+
+
+                toast.classList.add(
+                    'show'
+                );
+
+                toast.setAttribute(
+                    'aria-hidden',
+                    'false'
+                );
+
+
+                /*
+                 * Recargar dashboard
+                 */
+
+                setTimeout(
+                    function () {
+
+                        window.location.reload();
+
+                    },
+                    1200
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    'Error al registrar reposición:',
+                    error
+                );
+
+
+                errorElement.textContent =
+                    error.message ||
+                    'Ocurrió un error al registrar la reposición.';
+
+
+                errorElement.classList.add(
+                    'visible'
+                );
+
+
+            } finally {
+
+                /*
+                 * Reactivar botón
+                 */
+
+                confirmButton.disabled =
+                    false;
+
+                confirmText.hidden =
+                    false;
+
+                loadingText.hidden =
+                    true;
+
+            }
+
+        }
+    );
+
+});
+
+</script>
+
+@endpush

@@ -11,7 +11,7 @@ use App\Http\Controllers\AnalisisController;
 use App\Http\Controllers\AlertasController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\CategoriaController;
-
+use App\Http\Controllers\VentaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -125,7 +125,8 @@ Route::middleware('auth')->group(function () {
         'storeMovimiento'
     ])->name('inventario.movimiento.store');
 
-
+    Route::get('/ventas', [VentaController::class, 'index'])
+    ->name('ventas.index');
     /*
     |--------------------------------------------------------------------------
     | PREDICCIÓN MENSUAL

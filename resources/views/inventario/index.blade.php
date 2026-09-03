@@ -12,7 +12,7 @@
 
     /*
     |--------------------------------------------------------------------------
-    | INDICADORES
+    | DATOS DE RESUMEN
     |--------------------------------------------------------------------------
     */
 
@@ -88,7 +88,6 @@
     @endif
 
 
-
     {{-- =========================================================
          ENCABEZADO
     ========================================================== --}}
@@ -98,16 +97,16 @@
         <div>
 
             <span class="inventory-eyebrow">
-                GESTIÓN DE INVENTARIO
+                INVENTARIO
             </span>
 
             <h1>
-                Control de inventario
+                ¿Qué tengo disponible?
             </h1>
 
             <p>
-                Consulta el stock disponible y registra los movimientos
-                de tus productos.
+                Consulta rápidamente el stock de tus productos
+                y actualiza las existencias cuando sea necesario.
             </p>
 
         </div>
@@ -128,7 +127,6 @@
     </header>
 
 
-
     {{-- =========================================================
          RESUMEN
     ========================================================== --}}
@@ -136,13 +134,42 @@
     <section class="inventory-summary">
 
 
-        {{-- UNIDADES DISPONIBLES --}}
+        {{-- PRODUCTOS --}}
 
         <article class="inventory-summary-card">
 
             <div class="summary-card-icon brown">
 
                 <i class="bi bi-box-seam"></i>
+
+            </div>
+
+            <div class="summary-card-content">
+
+                <span>
+                    Productos
+                </span>
+
+                <strong>
+                    {{ $productosColeccion->count() }}
+                </strong>
+
+                <small>
+                    Registrados
+                </small>
+
+            </div>
+
+        </article>
+
+
+        {{-- UNIDADES --}}
+
+        <article class="inventory-summary-card">
+
+            <div class="summary-card-icon brown">
+
+                <i class="bi bi-stack"></i>
 
             </div>
 
@@ -163,7 +190,6 @@
             </div>
 
         </article>
-
 
 
         {{-- STOCK BAJO --}}
@@ -187,13 +213,12 @@
                 </strong>
 
                 <small>
-                    Requieren revisión
+                    Necesitan atención
                 </small>
 
             </div>
 
         </article>
-
 
 
         {{-- SIN STOCK --}}
@@ -217,50 +242,18 @@
                 </strong>
 
                 <small>
-                    Actualmente agotados
+                    Productos agotados
                 </small>
 
             </div>
 
         </article>
-
-
-
-        {{-- MOVIMIENTOS --}}
-
-        <article class="inventory-summary-card success">
-
-            <div class="summary-card-icon green">
-
-                <i class="bi bi-arrow-left-right"></i>
-
-            </div>
-
-            <div class="summary-card-content">
-
-                <span>
-                    Movimientos recientes
-                </span>
-
-                <strong>
-                    {{ $totalMovimientos }}
-                </strong>
-
-                <small>
-                    Registros disponibles
-                </small>
-
-            </div>
-
-        </article>
-
 
     </section>
 
 
-
     {{-- =========================================================
-         STOCK ACTUAL
+         INVENTARIO ACTUAL
     ========================================================== --}}
 
     <section class="inventory-panel">
@@ -279,7 +272,7 @@
                 </h2>
 
                 <p>
-                    Consulta rápidamente cuánto tienes disponible
+                    Revisa cuántas unidades tienes disponibles
                     de cada producto.
                 </p>
 
@@ -304,6 +297,50 @@
         </header>
 
 
+        {{-- =====================================================
+             FILTROS
+        ====================================================== --}}
+
+        <div class="inventory-filters">
+
+            <button
+                type="button"
+                class="inventory-filter active"
+                data-filter="all"
+            >
+                Todos
+            </button>
+
+            <button
+                type="button"
+                class="inventory-filter"
+                data-filter="normal"
+            >
+                Disponible
+            </button>
+
+            <button
+                type="button"
+                class="inventory-filter"
+                data-filter="low"
+            >
+                Stock bajo
+            </button>
+
+            <button
+                type="button"
+                class="inventory-filter"
+                data-filter="empty"
+            >
+                Sin stock
+            </button>
+
+        </div>
+
+
+        {{-- =====================================================
+             TABLA
+        ====================================================== --}}
 
         <div class="inventory-table-wrapper">
 
@@ -330,10 +367,6 @@
                         </th>
 
                         <th>
-                            Seguridad
-                        </th>
-
-                        <th>
                             Estado
                         </th>
 
@@ -347,7 +380,6 @@
 
                     @forelse($productos as $producto)
 
-
                         @php
 
                             $stock =
@@ -356,10 +388,30 @@
                             $stockMinimo =
                                 (int) $producto->stock_minimo;
 
+                            if (!$producto->activo) {
+
+                                $estadoFiltro = 'inactive';
+
+                            } elseif ($stock <= 0) {
+
+                                $estadoFiltro = 'empty';
+
+                            } elseif ($stock <= $stockMinimo) {
+
+                                $estadoFiltro = 'low';
+
+                            } else {
+
+                                $estadoFiltro = 'normal';
+
+                            }
+
                         @endphp
 
 
-                        <tr>
+                        <tr
+                            data-status="{{ $estadoFiltro }}"
+                        >
 
 
                             {{-- PRODUCTO --}}
@@ -404,20 +456,21 @@
                             </td>
 
 
-                            {{-- STOCK --}}
+                            {{-- DISPONIBLE --}}
 
                             <td>
 
-                                <div class="
-                                    stock-value
-                                    {{ $stock <= 0
-                                        ? 'empty'
-                                        : ($stock <= $stockMinimo
-                                            ? 'low'
-                                            : 'normal'
-                                        )
-                                    }}
-                                ">
+                                <div
+                                    class="
+                                        stock-value
+                                        {{ $stock <= 0
+                                            ? 'empty'
+                                            : ($stock <= $stockMinimo
+                                                ? 'low'
+                                                : 'normal'
+                                        ) }}
+                                    "
+                                >
 
                                     {{ $stock }}
 
@@ -437,19 +490,6 @@
                                 <span class="table-number">
 
                                     {{ $stockMinimo }}
-
-                                </span>
-
-                            </td>
-
-
-                            {{-- SEGURIDAD --}}
-
-                            <td>
-
-                                <span class="table-number">
-
-                                    {{ $producto->stock_seguridad }}
 
                                 </span>
 
@@ -499,7 +539,7 @@
 
                                         <i></i>
 
-                                        Stock normal
+                                        Disponible
 
                                     </span>
 
@@ -507,17 +547,15 @@
 
                             </td>
 
-
                         </tr>
 
 
                     @empty
 
-
                         <tr>
 
                             <td
-                                colspan="6"
+                                colspan="5"
                                 class="inventory-empty"
                             >
 
@@ -532,14 +570,13 @@
                                 </strong>
 
                                 <span>
-                                    Los productos aparecerán aquí cuando
-                                    sean registrados.
+                                    Los productos aparecerán aquí
+                                    cuando sean registrados.
                                 </span>
 
                             </td>
 
                         </tr>
-
 
                     @endforelse
 
@@ -551,12 +588,36 @@
         </div>
 
 
+        {{-- SIN RESULTADOS --}}
+
+        <div
+            id="inventoryNoResults"
+            class="inventory-no-results"
+            style="display: none;"
+        >
+
+            <div class="empty-state-icon">
+
+                <i class="bi bi-search"></i>
+
+            </div>
+
+            <strong>
+                No encontramos productos
+            </strong>
+
+            <span>
+                Prueba con otro nombre o cambia el filtro.
+            </span>
+
+        </div>
+
+
     </section>
 
 
-
     {{-- =========================================================
-         MOVIMIENTOS
+         MOVIMIENTOS RECIENTES
     ========================================================== --}}
 
     <section class="inventory-panel movements-panel">
@@ -567,15 +628,15 @@
             <div>
 
                 <span class="inventory-section-label">
-                    HISTORIAL
+                    ACTIVIDAD RECIENTE
                 </span>
 
                 <h2>
-                    Movimientos recientes
+                    Últimos movimientos
                 </h2>
 
                 <p>
-                    Consulta las últimas entradas, salidas y reposiciones.
+                    Consulta las últimas actualizaciones del inventario.
                 </p>
 
             </div>
@@ -585,12 +646,11 @@
 
                 <i class="bi bi-clock-history"></i>
 
-                Últimos registros
+                {{ $totalMovimientos }} registros
 
             </div>
 
         </header>
-
 
 
         <div class="inventory-table-wrapper">
@@ -614,11 +674,7 @@
                         </th>
 
                         <th>
-                            Antes
-                        </th>
-
-                        <th>
-                            Después
+                            Nuevo stock
                         </th>
 
                         <th>
@@ -664,7 +720,7 @@
                             </td>
 
 
-                            {{-- TIPO --}}
+                            {{-- MOVIMIENTO --}}
 
                             <td>
 
@@ -751,20 +807,7 @@
                             </td>
 
 
-                            {{-- ANTES --}}
-
-                            <td>
-
-                                <span class="movement-stock">
-
-                                    {{ $movimiento->stock_anterior }}
-
-                                </span>
-
-                            </td>
-
-
-                            {{-- DESPUÉS --}}
+                            {{-- NUEVO STOCK --}}
 
                             <td>
 
@@ -773,6 +816,10 @@
                                     {{ $movimiento->stock_nuevo }}
 
                                 </strong>
+
+                                <span class="movement-unit-label">
+                                    unidades
+                                </span>
 
                             </td>
 
@@ -797,11 +844,10 @@
 
                     @empty
 
-
                         <tr>
 
                             <td
-                                colspan="6"
+                                colspan="5"
                                 class="inventory-empty"
                             >
 
@@ -812,7 +858,7 @@
                                 </div>
 
                                 <strong>
-                                    No hay movimientos registrados
+                                    Todavía no hay movimientos
                                 </strong>
 
                                 <span>
@@ -823,7 +869,6 @@
                             </td>
 
                         </tr>
-
 
                     @endforelse
 
@@ -838,13 +883,12 @@
     </section>
 
 
-
 </main>
 
 
 
 {{-- =========================================================
-     MODAL
+     MODAL PARA REGISTRAR MOVIMIENTO
 ========================================================= --}}
 
 <div
@@ -871,11 +915,11 @@
                 </span>
 
                 <h2>
-                    Registrar movimiento
+                    Actualizar inventario
                 </h2>
 
                 <p>
-                    Actualiza las existencias de un producto.
+                    Registra una entrada, salida o reposición.
                 </p>
 
             </div>
@@ -893,7 +937,6 @@
             </button>
 
         </header>
-
 
 
         {{-- FORMULARIO --}}
@@ -947,13 +990,12 @@
             </div>
 
 
-
             {{-- TIPO --}}
 
             <div class="form-group">
 
                 <label for="tipo">
-                    Tipo de movimiento
+                    ¿Qué deseas registrar?
                 </label>
 
                 <select
@@ -963,7 +1005,7 @@
                 >
 
                     <option value="">
-                        Selecciona un tipo
+                        Selecciona una opción
                     </option>
 
                     <option
@@ -1003,7 +1045,7 @@
                             : ''
                         }}
                     >
-                        Ajuste
+                        Ajuste de stock
                     </option>
 
                 </select>
@@ -1013,7 +1055,6 @@
                 </small>
 
             </div>
-
 
 
             {{-- CANTIDAD --}}
@@ -1037,7 +1078,6 @@
             </div>
 
 
-
             {{-- MOTIVO --}}
 
             <div class="form-group">
@@ -1057,11 +1097,10 @@
                     id="motivo"
                     rows="3"
                     maxlength="500"
-                    placeholder="Describe el motivo del movimiento..."
+                    placeholder="Escribe el motivo del movimiento..."
                 >{{ old('motivo') }}</textarea>
 
             </div>
-
 
 
             {{-- ACCIONES --}}
@@ -1084,7 +1123,7 @@
 
                     <i class="bi bi-check-lg"></i>
 
-                    Registrar movimiento
+                    Guardar movimiento
 
                 </button>
 
@@ -1113,7 +1152,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /*
     |--------------------------------------------------------------------------
-    | BUSCADOR
+    | ELEMENTOS
     |--------------------------------------------------------------------------
     */
 
@@ -1123,32 +1162,159 @@ document.addEventListener('DOMContentLoaded', function () {
     const tableBody =
         document.getElementById('inventoryTableBody');
 
+    const noResults =
+        document.getElementById('inventoryNoResults');
 
-    if (searchInput && tableBody) {
+    const filterButtons =
+        document.querySelectorAll('.inventory-filter');
 
-        searchInput.addEventListener('input', function () {
 
-            const search =
-                this.value.toLowerCase().trim();
+    let filtroActual = 'all';
 
-            const rows =
-                tableBody.querySelectorAll('tr');
 
-            rows.forEach(function (row) {
+    /*
+    |--------------------------------------------------------------------------
+    | FILTRAR TABLA
+    |--------------------------------------------------------------------------
+    */
 
-                const text =
-                    row.textContent.toLowerCase();
+    function actualizarTabla() {
 
-                row.style.display =
-                    text.includes(search)
-                        ? ''
-                        : 'none';
+        if (!tableBody) {
+            return;
+        }
 
-            });
+
+        const rows =
+            tableBody.querySelectorAll(
+                'tr[data-status]'
+            );
+
+
+        const search =
+            searchInput
+                ? searchInput.value
+                    .toLowerCase()
+                    .trim()
+                : '';
+
+
+        let visibles = 0;
+
+
+        rows.forEach(function (row) {
+
+            const texto =
+                row.textContent
+                    .toLowerCase();
+
+
+            const estado =
+                row.dataset.status || '';
+
+
+            const coincideTexto =
+                !search ||
+                texto.includes(search);
+
+
+            const coincideFiltro =
+                filtroActual === 'all' ||
+                estado === filtroActual;
+
+
+            const mostrar =
+                coincideTexto &&
+                coincideFiltro;
+
+
+            row.style.display =
+                mostrar
+                    ? ''
+                    : 'none';
+
+
+            if (mostrar) {
+
+                visibles++;
+
+            }
 
         });
 
+
+        /*
+         * Mostrar mensaje cuando
+         * no existen coincidencias.
+         */
+
+        if (noResults) {
+
+            noResults.style.display =
+                visibles === 0 &&
+                rows.length > 0
+                    ? 'flex'
+                    : 'none';
+
+        }
+
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | BUSCADOR
+    |--------------------------------------------------------------------------
+    */
+
+    if (searchInput) {
+
+        searchInput.addEventListener(
+            'input',
+            actualizarTabla
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FILTROS
+    |--------------------------------------------------------------------------
+    */
+
+    filterButtons.forEach(function (button) {
+
+        button.addEventListener(
+            'click',
+            function () {
+
+                filtroActual =
+                    this.dataset.filter || 'all';
+
+
+                filterButtons.forEach(
+                    function (item) {
+
+                        item.classList.remove(
+                            'active'
+                        );
+
+                    }
+                );
+
+
+                this.classList.add(
+                    'active'
+                );
+
+
+                actualizarTabla();
+
+            }
+        );
+
+    });
 
 
     /*
@@ -1166,74 +1332,80 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (tipo && movementHelp) {
 
-        tipo.addEventListener('change', function () {
+        tipo.addEventListener(
+            'change',
+            function () {
 
-            switch (this.value) {
+                switch (this.value) {
 
-                case 'entrada':
+                    case 'entrada':
 
-                    movementHelp.textContent =
-                        'Las unidades se sumarán al stock actual.';
+                        movementHelp.textContent =
+                            'Las unidades se sumarán al stock actual.';
 
-                    break;
-
-
-                case 'salida':
-
-                    movementHelp.textContent =
-                        'Las unidades se descontarán del stock actual.';
-
-                    break;
+                        break;
 
 
-                case 'reposicion':
+                    case 'salida':
 
-                    movementHelp.textContent =
-                        'Las unidades se registrarán como reposición.';
+                        movementHelp.textContent =
+                            'Las unidades se descontarán del stock actual.';
 
-                    break;
-
-
-                case 'ajuste':
-
-                    movementHelp.textContent =
-                        'Utiliza este movimiento para corregir el stock.';
-
-                    break;
+                        break;
 
 
-                default:
+                    case 'reposicion':
 
-                    movementHelp.textContent =
-                        'Selecciona qué deseas registrar.';
+                        movementHelp.textContent =
+                            'Las unidades se agregarán como reposición.';
+
+                        break;
+
+
+                    case 'ajuste':
+
+                        movementHelp.textContent =
+                            'Utiliza esta opción para corregir el stock.';
+
+                        break;
+
+
+                    default:
+
+                        movementHelp.textContent =
+                            'Selecciona qué deseas registrar.';
+
+                }
 
             }
-
-        });
+        );
 
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | ESC
+    | CERRAR CON ESC
     |--------------------------------------------------------------------------
     */
 
-    document.addEventListener('keydown', function (event) {
+    document.addEventListener(
+        'keydown',
+        function (event) {
 
-        if (event.key === 'Escape') {
+            if (event.key === 'Escape') {
 
-            cerrarMovimiento();
+                cerrarMovimiento();
+
+            }
 
         }
-
-    });
+    );
 
 
     /*
     |--------------------------------------------------------------------------
-    | ABRIR MODAL SI HAY ERRORES
+    | ABRIR AUTOMÁTICAMENTE SI EXISTEN ERRORES
     |--------------------------------------------------------------------------
     */
 
@@ -1243,12 +1415,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     @endif
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | APLICAR FILTRADO INICIAL
+    |--------------------------------------------------------------------------
+    */
+
+    actualizarTabla();
+
 });
 
 
 /*
 |--------------------------------------------------------------------------
-| ABRIR
+| ABRIR MODAL
 |--------------------------------------------------------------------------
 */
 
@@ -1257,20 +1438,29 @@ function abrirMovimiento() {
     const modal =
         document.getElementById('movementModal');
 
+
     if (!modal) {
+
         return;
+
     }
 
-    modal.classList.add('show');
 
-    document.body.classList.add('modal-open');
+    modal.classList.add(
+        'show'
+    );
+
+
+    document.body.classList.add(
+        'modal-open'
+    );
 
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| CERRAR
+| CERRAR MODAL
 |--------------------------------------------------------------------------
 */
 
@@ -1279,26 +1469,38 @@ function cerrarMovimiento() {
     const modal =
         document.getElementById('movementModal');
 
+
     if (!modal) {
+
         return;
+
     }
 
-    modal.classList.remove('show');
 
-    document.body.classList.remove('modal-open');
+    modal.classList.remove(
+        'show'
+    );
+
+
+    document.body.classList.remove(
+        'modal-open'
+    );
 
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| CLICK EXTERIOR
+| CERRAR AL HACER CLICK FUERA
 |--------------------------------------------------------------------------
 */
 
 function cerrarModalExterior(event) {
 
-    if (event.target.id === 'movementModal') {
+    if (
+        event.target.id ===
+        'movementModal'
+    ) {
 
         cerrarMovimiento();
 

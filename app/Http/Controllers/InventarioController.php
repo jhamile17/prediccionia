@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\DB;
 class InventarioController extends Controller
 {
     /**
-     * Mostrar inventario.
+     * ============================================================
+     * MOSTRAR INVENTARIO
+     * ============================================================
      */
     public function index()
     {
@@ -20,7 +22,7 @@ class InventarioController extends Controller
 
         $movimientos = MovimientoInventario::with([
                 'producto',
-                'usuario'
+                'usuario',
             ])
             ->orderByDesc('fecha')
             ->orderByDesc('id')
@@ -29,9 +31,11 @@ class InventarioController extends Controller
 
         $totalProductos = $productos->count();
 
-        $stockBajo = $productos->filter(function ($producto) {
-            return $producto->stock <= $producto->stock_minimo;
-        })->count();
+        $stockBajo = $productos->filter(
+            function ($producto) {
+                return $producto->stock <= $producto->stock_minimo;
+            }
+        )->count();
 
         $stockTotal = $productos->sum('stock');
 
@@ -39,19 +43,24 @@ class InventarioController extends Controller
             ->where('activo', true)
             ->count();
 
-        return view('inventario.index', compact(
-            'productos',
-            'movimientos',
-            'totalProductos',
-            'stockBajo',
-            'stockTotal',
-            'productosActivos'
-        ));
+        return view(
+            'inventario.index',
+            compact(
+                'productos',
+                'movimientos',
+                'totalProductos',
+                'stockBajo',
+                'stockTotal',
+                'productosActivos'
+            )
+        );
     }
 
 
     /**
-     * Registrar un movimiento de inventario.
+     * ============================================================
+     * REGISTRAR MOVIMIENTO DE INVENTARIO
+     * ============================================================
      */
     public function storeMovimiento(Request $request)
     {
@@ -81,140 +90,255 @@ class InventarioController extends Controller
         ]);
 
 
-        DB::transaction(function () use ($request) {
+        /*
+         * ========================================================
+         * TRANSACCIÓN
+         * ========================================================
+         *
+         * Se bloquea el producto para evitar que dos operaciones
+         * modifiquen el stock simultáneamente.
+         */
 
-            /*
-            |--------------------------------------------------------------------------
-            | Bloquear producto mientras se modifica
-            |--------------------------------------------------------------------------
-            */
+        $movimiento = DB::transaction(
+            function () use ($request) {
 
-            $producto = Producto::where(
-                'id',
-                $request->producto_id
-            )
-            ->lockForUpdate()
-            ->firstOrFail();
-
-
-            $stockAnterior = (int) $producto->stock;
-
-            $cantidad = (int) $request->cantidad;
-
-            $tipo = $request->tipo;
+                $producto = Producto::where(
+                    'id',
+                    $request->producto_id
+                )
+                ->lockForUpdate()
+                ->firstOrFail();
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Calcular nuevo stock
-            |--------------------------------------------------------------------------
-            */
+                /*
+                 * ------------------------------------------------
+                 * DATOS ACTUALES
+                 * ------------------------------------------------
+                 */
 
-            switch ($tipo) {
+                $stockAnterior =
+                    (int) $producto->stock;
 
-                case 'entrada':
+                $cantidad =
+                    (int) $request->cantidad;
 
-                    $stockNuevo =
-                        $stockAnterior + $cantidad;
-
-                    break;
-
-
-                case 'reposicion':
-
-                    $stockNuevo =
-                        $stockAnterior + $cantidad;
-
-                    break;
+                $tipo =
+                    $request->tipo;
 
 
-                case 'salida':
+                /*
+                 * ------------------------------------------------
+                 * CALCULAR NUEVO STOCK
+                 * ------------------------------------------------
+                 */
 
-                    $stockNuevo =
-                        $stockAnterior - $cantidad;
+                switch ($tipo) {
 
-                    break;
+                    case 'entrada':
 
+                        $stockNuevo =
+                            $stockAnterior + $cantidad;
 
-                case 'ajuste':
-
-                    /*
-                     * Para un ajuste, la cantidad representa
-                     * el nuevo stock directamente.
-                     */
-                    $stockNuevo = $cantidad;
-
-                    break;
+                        break;
 
 
-                default:
+                    case 'reposicion':
 
-                    throw new \Exception(
-                        'Tipo de movimiento no válido.'
+                        $stockNuevo =
+                            $stockAnterior + $cantidad;
+
+                        break;
+
+
+                    case 'salida':
+
+                        $stockNuevo =
+                            $stockAnterior - $cantidad;
+
+                        break;
+
+
+                    case 'ajuste':
+
+                        /*
+                         * En un ajuste, la cantidad representa
+                         * directamente el nuevo stock.
+                         */
+                        $stockNuevo =
+                            $cantidad;
+
+                        break;
+
+
+                    default:
+
+                        throw new \RuntimeException(
+                            'Tipo de movimiento no válido.'
+                        );
+                }
+
+
+                /*
+                 * ------------------------------------------------
+                 * VALIDAR STOCK
+                 * ------------------------------------------------
+                 */
+
+                if ($stockNuevo < 0) {
+
+                    throw new \RuntimeException(
+                        'No hay suficiente stock para realizar esta salida.'
                     );
+                }
+
+
+                /*
+                 * ------------------------------------------------
+                 * ACTUALIZAR STOCK
+                 * ------------------------------------------------
+                 */
+
+                $producto->update([
+                    'stock' =>
+                        $stockNuevo,
+                ]);
+
+
+                /*
+                 * ------------------------------------------------
+                 * MOTIVO
+                 * ------------------------------------------------
+                 */
+
+                $motivo =
+                    $request->filled('motivo')
+                        ? $request->input('motivo')
+                        : $this->obtenerMotivoPorDefecto(
+                            $tipo
+                        );
+
+
+                /*
+                 * ------------------------------------------------
+                 * REGISTRAR MOVIMIENTO
+                 * ------------------------------------------------
+                 */
+
+                $registro =
+                    MovimientoInventario::create([
+
+                        'producto_id' =>
+                            $producto->id,
+
+                        'usuario_id' =>
+                            auth()->id(),
+
+                        'tipo' =>
+                            $tipo,
+
+                        'cantidad' =>
+                            $cantidad,
+
+                        'stock_anterior' =>
+                            $stockAnterior,
+
+                        'stock_nuevo' =>
+                            $stockNuevo,
+
+                        'motivo' =>
+                            $motivo,
+
+                        'fecha' =>
+                            now(),
+                    ]);
+
+
+                /*
+                 * ------------------------------------------------
+                 * DATOS PARA LA RESPUESTA
+                 * ------------------------------------------------
+                 */
+
+                return [
+
+                    'producto_id' =>
+                        (int) $producto->id,
+
+                    'producto' =>
+                        $producto->nombre,
+
+                    'stock_anterior' =>
+                        $stockAnterior,
+
+                    'cantidad' =>
+                        $cantidad,
+
+                    'stock_nuevo' =>
+                        $stockNuevo,
+
+                    'tipo' =>
+                        $tipo,
+
+                    'movimiento_id' =>
+                        (int) $registro->id,
+                ];
             }
+        );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | No permitir stock negativo
-            |--------------------------------------------------------------------------
-            */
+        /*
+         * ========================================================
+         * RESPUESTA JSON
+         * ========================================================
+         *
+         * El Dashboard utiliza esta respuesta para actualizar
+         * el estado sin tener que navegar al inventario.
+         */
 
-            if ($stockNuevo < 0) {
+        if ($request->expectsJson()) {
 
-                throw new \Exception(
-                    'No hay suficiente stock para realizar esta salida.'
-                );
-            }
+            return response()->json([
 
+                'success' =>
+                    true,
 
-            /*
-            |--------------------------------------------------------------------------
-            | Actualizar producto
-            |--------------------------------------------------------------------------
-            */
-
-            $producto->update([
-                'stock' => $stockNuevo,
-            ]);
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Registrar movimiento
-            |--------------------------------------------------------------------------
-            */
-
-            MovimientoInventario::create([
+                'message' =>
+                    $movimiento['tipo'] === 'reposicion'
+                        ? 'Reposición registrada correctamente.'
+                        : 'Movimiento registrado correctamente.',
 
                 'producto_id' =>
-                    $producto->id,
+                    $movimiento['producto_id'],
 
-                'usuario_id' => auth()->id(),
-
-                'tipo' =>
-                    $tipo,
-
-                'cantidad' =>
-                    $cantidad,
+                'producto' =>
+                    $movimiento['producto'],
 
                 'stock_anterior' =>
-                    $stockAnterior,
+                    $movimiento['stock_anterior'],
+
+                'cantidad' =>
+                    $movimiento['cantidad'],
 
                 'stock_nuevo' =>
-                    $stockNuevo,
+                    $movimiento['stock_nuevo'],
 
-                'motivo' =>
-                    $request->motivo
-                    ?: $this->obtenerMotivoPorDefecto($tipo),
+                'tipo' =>
+                    $movimiento['tipo'],
 
-                'fecha' =>
-                    now(),
-
+                'movimiento_id' =>
+                    $movimiento['movimiento_id'],
             ]);
-        });
+        }
 
+
+        /*
+         * ========================================================
+         * FORMULARIO NORMAL
+         * ========================================================
+         *
+         * La pantalla de Inventario continúa funcionando como
+         * antes.
+         */
 
         return redirect()
             ->route('inventario.index')
@@ -226,7 +350,9 @@ class InventarioController extends Controller
 
 
     /**
-     * Motivo automático.
+     * ============================================================
+     * MOTIVO AUTOMÁTICO
+     * ============================================================
      */
     private function obtenerMotivoPorDefecto(
         string $tipo
@@ -241,7 +367,7 @@ class InventarioController extends Controller
                 'Salida manual de inventario',
 
             'reposicion' =>
-                'Reposición de inventario',
+                'Reposición sugerida por el sistema',
 
             'ajuste' =>
                 'Ajuste manual de inventario',

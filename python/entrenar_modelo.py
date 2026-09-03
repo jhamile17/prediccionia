@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 import pandas as pd
 import joblib
@@ -12,14 +13,10 @@ from sklearn.metrics import (
 
 
 # ============================================================
-# 1. RUTAS
+# CONFIGURACIÓN GENERAL
 # ============================================================
 
-BASE_DIR = os.path.dirname(
-    os.path.dirname(
-        os.path.abspath(__file__)
-    )
-)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DATASET_PATH = os.path.join(
     BASE_DIR,
@@ -29,20 +26,16 @@ DATASET_PATH = os.path.join(
     "dataset_demanda.csv"
 )
 
-MODEL_DIR = os.path.join(
+MODEL_PATH = os.path.join(
     BASE_DIR,
     "python",
-    "modelos"
-)
-
-MODEL_PATH = os.path.join(
-    MODEL_DIR,
+    "modelos",
     "modelo_demanda.pkl"
 )
 
 
 # ============================================================
-# 2. CONFIGURACIÓN DEL MODELO
+# VARIABLES DEL MODELO
 # ============================================================
 
 FEATURES = [
@@ -60,14 +53,12 @@ FEATURES = [
     "es_dia_especial",
 ]
 
-TARGET = "demanda"
-
 
 # ============================================================
-# 3. HIPERPARÁMETROS VALIDADOS
+# CONFIGURACIÓN RANDOM FOREST
 # ============================================================
 
-MODELO_PARAMETROS = {
+RF_PARAMS = {
     "n_estimators": 400,
     "max_depth": 20,
     "min_samples_leaf": 2,
@@ -78,49 +69,41 @@ MODELO_PARAMETROS = {
 
 
 # ============================================================
-# 4. PESOS CONTINUOS PARA DEMANDA ALTA
+# PESOS CONTINUOS V5
 # ============================================================
 
-PESO_ALPHA = 0.02
-PESO_MAXIMO = 2.0
+PESO_ALPHA = 0.03
 PESO_UMBRAL = 10.0
+PESO_MAXIMO = 2.0
+
+
+# ============================================================
+# FUNCIONES AUXILIARES
+# ============================================================
+
+def imprimir_separador(caracter="-", longitud=70):
+    print(caracter * longitud)
 
 
 def crear_pesos_demanda(y):
     """
-    Asigna mayor peso a observaciones con demanda alta.
+    Asigna mayor peso a demandas superiores al umbral.
 
     Fórmula:
 
-        peso = 1 + alpha * max(0, demanda - umbral)
+        peso = 1 + alpha * max(demanda - umbral, 0)
 
-    con límite máximo.
-
-    Ejemplos con alpha=0.02 y max=2.0:
-
-        demanda <= 10 -> peso 1.00
-        demanda 15    -> peso 1.10
-        demanda 20    -> peso 1.20
-        demanda 30    -> peso 1.40
-        demanda 40    -> peso 1.60
-        demanda 50    -> peso 1.80
-        demanda 60+   -> peso 2.00
+    Después se limita al máximo establecido.
     """
 
-    valores = np.asarray(
-        y,
-        dtype=float
-    )
+    y_array = np.asarray(y, dtype=float)
 
     exceso = np.maximum(
-        valores - PESO_UMBRAL,
+        y_array - PESO_UMBRAL,
         0
     )
 
-    pesos = (
-        1.0
-        + PESO_ALPHA * exceso
-    )
+    pesos = 1.0 + PESO_ALPHA * exceso
 
     pesos = np.minimum(
         pesos,
@@ -130,1050 +113,810 @@ def crear_pesos_demanda(y):
     return pesos
 
 
-# ============================================================
-# 5. CREAR MODELO
-# ============================================================
+def calcular_metricas(y_real, prediccion):
+    """
+    Calcula métricas generales y métricas específicas
+    para demandas altas.
+    """
 
-def crear_modelo():
+    y_real = np.asarray(y_real)
+    prediccion = np.asarray(prediccion)
 
-    return RandomForestRegressor(
-        n_estimators=MODELO_PARAMETROS["n_estimators"],
-        max_depth=MODELO_PARAMETROS["max_depth"],
-        min_samples_leaf=MODELO_PARAMETROS["min_samples_leaf"],
-        max_features=MODELO_PARAMETROS["max_features"],
-        random_state=MODELO_PARAMETROS["random_state"],
-        n_jobs=MODELO_PARAMETROS["n_jobs"],
+    mae = mean_absolute_error(
+        y_real,
+        prediccion
     )
 
-
-# ============================================================
-# 6. ENCABEZADO
-# ============================================================
-
-print("=" * 70)
-print(
-    " SISTEMA INTELIGENTE DE PREDICCIÓN DE DEMANDA"
-)
-print(
-    " ENTRENAMIENTO V3 - PESOS CONTINUOS"
-)
-print("=" * 70)
-
-
-# ============================================================
-# 7. CARGAR DATASET
-# ============================================================
-
-print("\n[1/8] Cargando dataset...")
-
-if not os.path.exists(DATASET_PATH):
-
-    raise FileNotFoundError(
-        f"No se encontró el dataset:\n"
-        f"{DATASET_PATH}"
-    )
-
-df = pd.read_csv(
-    DATASET_PATH
-)
-
-print(
-    "Dataset cargado correctamente."
-)
-
-print(
-    f"Registros : {len(df)}"
-)
-
-print(
-    f"Columnas  : {len(df.columns)}"
-)
-
-
-# ============================================================
-# 8. VALIDAR COLUMNAS
-# ============================================================
-
-print(
-    "\n[2/8] Validando estructura del dataset..."
-)
-
-columnas_requeridas = [
-    "fecha",
-    TARGET,
-] + FEATURES
-
-columnas_faltantes = [
-    columna
-    for columna in columnas_requeridas
-    if columna not in df.columns
-]
-
-if columnas_faltantes:
-
-    raise ValueError(
-        "Faltan las siguientes columnas:\n"
-        + "\n".join(
-            f"- {columna}"
-            for columna in columnas_faltantes
+    rmse = np.sqrt(
+        mean_squared_error(
+            y_real,
+            prediccion
         )
     )
 
-print(
-    "Todas las columnas requeridas existen."
-)
-
-
-# ============================================================
-# 9. PREPARAR FECHA
-# ============================================================
-
-df["fecha"] = pd.to_datetime(
-    df["fecha"],
-    errors="coerce"
-)
-
-if df["fecha"].isna().any():
-
-    cantidad = int(
-        df["fecha"].isna().sum()
+    r2 = r2_score(
+        y_real,
+        prediccion
     )
 
-    raise ValueError(
-        f"Se encontraron {cantidad} fechas inválidas."
+    mascara_picos = y_real >= 20
+
+    cantidad_picos = int(
+        mascara_picos.sum()
     )
 
+    if cantidad_picos > 0:
+
+        mae_picos = mean_absolute_error(
+            y_real[mascara_picos],
+            prediccion[mascara_picos]
+        )
+
+        rmse_picos = np.sqrt(
+            mean_squared_error(
+                y_real[mascara_picos],
+                prediccion[mascara_picos]
+            )
+        )
+
+    else:
+
+        mae_picos = np.nan
+        rmse_picos = np.nan
+
+    return {
+        "mae": mae,
+        "rmse": rmse,
+        "r2": r2,
+        "mae_picos": mae_picos,
+        "rmse_picos": rmse_picos,
+        "cantidad_picos": cantidad_picos,
+    }
+
+
+def entrenar_random_forest(X, y):
+    """
+    Entrena el Random Forest V5 utilizando
+    pesos continuos de demanda.
+    """
+
+    pesos = crear_pesos_demanda(y)
+
+    modelo = RandomForestRegressor(
+        **RF_PARAMS
+    )
+
+    modelo.fit(
+        X,
+        y,
+        sample_weight=pesos
+    )
+
+    return modelo, pesos
+
 
 # ============================================================
-# 10. ORDEN CRONOLÓGICO
+# PROGRAMA PRINCIPAL
 # ============================================================
 
-print(
-    "\n[3/8] Ordenando datos cronológicamente..."
-)
+def main():
 
-df = df.sort_values(
-    [
+    print("=" * 70)
+    print(" SISTEMA INTELIGENTE DE PREDICCIÓN DE DEMANDA")
+    print(" ENTRENAMIENTO V5 - PESOS CONTINUOS")
+    print("=" * 70)
+
+
+    # ========================================================
+    # 1. CARGAR DATASET
+    # ========================================================
+
+    print("\n[1/8] Cargando dataset...")
+
+    if not os.path.exists(DATASET_PATH):
+        print("ERROR: No existe el dataset:")
+        print(DATASET_PATH)
+        sys.exit(1)
+
+    df = pd.read_csv(
+        DATASET_PATH
+    )
+
+    print("Dataset cargado correctamente.")
+    print(f"Registros : {len(df)}")
+    print(f"Columnas  : {len(df.columns)}")
+
+
+    # ========================================================
+    # 2. VALIDAR ESTRUCTURA
+    # ========================================================
+
+    print("\n[2/8] Validando estructura del dataset...")
+
+    columnas_requeridas = FEATURES + [
         "fecha",
-        "producto_id",
+        "demanda",
+        "producto",
     ]
-).reset_index(
-    drop=True
-)
 
-fecha_inicio_dataset = df[
-    "fecha"
-].min()
+    faltantes = [
+        columna
+        for columna in columnas_requeridas
+        if columna not in df.columns
+    ]
 
-fecha_fin_dataset = df[
-    "fecha"
-].max()
+    if faltantes:
 
-print(
-    f"Periodo del dataset: "
-    f"{fecha_inicio_dataset.date()} "
-    f"→ "
-    f"{fecha_fin_dataset.date()}"
-)
+        print("\nERROR: faltan columnas:")
+
+        for columna in faltantes:
+            print(f"  - {columna}")
+
+        sys.exit(1)
+
+    print("Todas las columnas requeridas existen.")
 
 
-# ============================================================
-# 11. VALIDAR VALORES NULOS
-# ============================================================
+    # ========================================================
+    # 3. PREPARAR DATOS
+    # ========================================================
 
-print(
-    "\nValidando valores faltantes..."
-)
+    print("\n[3/8] Ordenando datos cronológicamente...")
 
-nulos = df[
-    FEATURES + [TARGET]
-].isnull().sum()
+    df["fecha"] = pd.to_datetime(
+        df["fecha"],
+        errors="coerce"
+    )
 
-nulos = nulos[
-    nulos > 0
-]
+    if df["fecha"].isna().any():
+        print("ERROR: Existen fechas inválidas.")
+        sys.exit(1)
 
-if len(nulos) > 0:
+    df = df.sort_values(
+        ["fecha", "producto_id"]
+    ).reset_index(drop=True)
 
     print(
-        "\nSe encontraron valores faltantes:"
+        "Periodo del dataset: "
+        f"{df['fecha'].min().date()} → "
+        f"{df['fecha'].max().date()}"
     )
 
-    for columna, cantidad in nulos.items():
+    print("\nValidando valores faltantes...")
+
+    nulos_modelo = df[FEATURES].isna().sum()
+
+    columnas_con_nulos = nulos_modelo[
+        nulos_modelo > 0
+    ]
+
+    if len(columnas_con_nulos) > 0:
+
+        print("\nERROR: existen valores faltantes:")
+
+        print(columnas_con_nulos)
+
+        sys.exit(1)
+
+    print(
+        "No existen valores faltantes "
+        "en las variables del modelo."
+    )
+
+
+    # ========================================================
+    # 4. DIVISIÓN TEMPORAL
+    # ========================================================
+
+    print("\n[4/8] Dividiendo datos temporalmente...")
+
+    n_total = len(df)
+
+    corte_test = int(
+        n_total * 0.80
+    )
+
+    desarrollo = df.iloc[
+        :corte_test
+    ].copy()
+
+    test = df.iloc[
+        corte_test:
+    ].copy()
+
+
+    print("\nDESARROLLO:")
+    print(
+        f"Registros: {len(desarrollo)}"
+    )
+
+    print(
+        f"Periodo: "
+        f"{desarrollo['fecha'].min().date()} → "
+        f"{desarrollo['fecha'].max().date()}"
+    )
+
+
+    print("\nPRUEBA FINAL:")
+    print(
+        f"Registros: {len(test)}"
+    )
+
+    print(
+        f"Periodo: "
+        f"{test['fecha'].min().date()} → "
+        f"{test['fecha'].max().date()}"
+    )
+
+
+    # ========================================================
+    # 5. VALIDACIÓN TEMPORAL
+    # ========================================================
+
+    print("\n[5/8] Creando validación temporal...")
+
+    corte_validacion = int(
+        len(desarrollo) * 0.80
+    )
+
+    train = desarrollo.iloc[
+        :corte_validacion
+    ].copy()
+
+    validacion = desarrollo.iloc[
+        corte_validacion:
+    ].copy()
+
+
+    print("\nENTRENAMIENTO:")
+    print(
+        f"Registros: {len(train)}"
+    )
+
+    print(
+        f"Periodo: "
+        f"{train['fecha'].min().date()} → "
+        f"{train['fecha'].max().date()}"
+    )
+
+
+    print("\nVALIDACIÓN:")
+    print(
+        f"Registros: {len(validacion)}"
+    )
+
+    print(
+        f"Periodo: "
+        f"{validacion['fecha'].min().date()} → "
+        f"{validacion['fecha'].max().date()}"
+    )
+
+
+    # ========================================================
+    # PREPARAR MATRICES
+    # ========================================================
+
+    X_train = train[FEATURES]
+    y_train = train["demanda"]
+
+    X_valid = validacion[FEATURES]
+    y_valid = validacion["demanda"]
+
+    X_dev = desarrollo[FEATURES]
+    y_dev = desarrollo["demanda"]
+
+    X_test = test[FEATURES]
+    y_test = test["demanda"]
+
+
+    # ========================================================
+    # 6. VALIDACIÓN V5
+    # ========================================================
+
+    print("\n[6/8] Calculando pesos continuos...")
+
+    print(
+        f"Alpha       : {PESO_ALPHA}"
+    )
+
+    print(
+        f"Umbral      : {PESO_UMBRAL}"
+    )
+
+    print(
+        f"Peso máximo : {PESO_MAXIMO}"
+    )
+
+
+    pesos_train = crear_pesos_demanda(
+        y_train
+    )
+
+    print(
+        f"Peso mínimo : {pesos_train.min():.2f}"
+    )
+
+    print(
+        f"Peso máximo : {pesos_train.max():.2f}"
+    )
+
+    print(
+        f"Peso promedio: {pesos_train.mean():.4f}"
+    )
+
+
+    print("\nEntrenando modelo sobre entrenamiento...")
+
+
+    modelo_validacion = RandomForestRegressor(
+        **RF_PARAMS
+    )
+
+    modelo_validacion.fit(
+        X_train,
+        y_train,
+        sample_weight=pesos_train
+    )
+
+
+    pred_validacion = modelo_validacion.predict(
+        X_valid
+    )
+
+    metricas_validacion = calcular_metricas(
+        y_valid,
+        pred_validacion
+    )
+
+
+    print("\n" + "=" * 70)
+    print(" RESULTADO VALIDACIÓN")
+    print("=" * 70)
+
+    print(
+        f"MAE  : {metricas_validacion['mae']:.4f}"
+    )
+
+    print(
+        f"RMSE : {metricas_validacion['rmse']:.4f}"
+    )
+
+    print(
+        f"R²   : {metricas_validacion['r2']:.4f}"
+    )
+
+    print(
+        f"MAE picos >=20 : "
+        f"{metricas_validacion['mae_picos']:.4f}"
+    )
+
+    print(
+        f"RMSE picos >=20: "
+        f"{metricas_validacion['rmse_picos']:.4f}"
+    )
+
+
+    # ========================================================
+    # 7. MODELO FINAL
+    # ========================================================
+
+    print("\n[7/8] Entrenando modelo final...")
+
+    pesos_desarrollo = crear_pesos_demanda(
+        y_dev
+    )
+
+    modelo_final = RandomForestRegressor(
+        **RF_PARAMS
+    )
+
+    modelo_final.fit(
+        X_dev,
+        y_dev,
+        sample_weight=pesos_desarrollo
+    )
+
+    print(
+        "Modelo final entrenado correctamente."
+    )
+
+
+    # ========================================================
+    # 8. EVALUACIÓN TEST
+    # ========================================================
+
+    print("\n[8/8] Evaluando con datos de prueba...")
+
+    pred_test = modelo_final.predict(
+        X_test
+    )
+
+    metricas_test = calcular_metricas(
+        y_test,
+        pred_test
+    )
+
+
+    print("\n" + "=" * 70)
+    print(" RESULTADOS FINALES DEL MODELO V5")
+    print("=" * 70)
+
+    print(
+        f"MAE  : {metricas_test['mae']:.4f}"
+    )
+
+    print(
+        f"RMSE : {metricas_test['rmse']:.4f}"
+    )
+
+    print(
+        f"R²   : {metricas_test['r2']:.4f}"
+    )
+
+
+    # ========================================================
+    # ANÁLISIS DE DEMANDA ALTA
+    # ========================================================
+
+    print("\n" + "-" * 70)
+    print(" ANÁLISIS DE DEMANDA ALTA")
+    print("-" * 70)
+
+    print(
+        f"Registros con demanda >=20: "
+        f"{metricas_test['cantidad_picos']}"
+    )
+
+    print(
+        f"MAE picos : "
+        f"{metricas_test['mae_picos']:.4f}"
+    )
+
+    print(
+        f"RMSE picos: "
+        f"{metricas_test['rmse_picos']:.4f}"
+    )
+
+
+    # ========================================================
+    # IMPORTANCIA DE VARIABLES
+    # ========================================================
+
+    print("\n" + "-" * 70)
+    print(" IMPORTANCIA DE VARIABLES")
+    print("-" * 70)
+
+    importancias = pd.Series(
+        modelo_final.feature_importances_,
+        index=FEATURES
+    ).sort_values(
+        ascending=False
+    )
+
+    for variable, importancia in importancias.items():
 
         print(
-            f"  {columna}: {cantidad}"
+            f"{variable:<25} "
+            f"{importancia:.4f}"
         )
 
-    raise ValueError(
-        "El dataset contiene valores faltantes "
-        "en variables utilizadas por el modelo."
-    )
 
-print(
-    "No existen valores faltantes "
-    "en las variables del modelo."
-)
-
-
-# ============================================================
-# 12. CREAR X E Y
-# ============================================================
-
-X = df[
-    FEATURES
-].copy()
-
-y = df[
-    TARGET
-].copy()
-
-
-# ============================================================
-# 13. DIVISIÓN TEMPORAL
-# ============================================================
-
-print(
-    "\n[4/8] Dividiendo datos temporalmente..."
-)
-
-total = len(df)
-
-# 80% desarrollo
-# 20% test final
-
-punto_test = int(
-    total * 0.80
-)
-
-X_dev = X.iloc[
-    :punto_test
-].copy()
-
-y_dev = y.iloc[
-    :punto_test
-].copy()
-
-X_test = X.iloc[
-    punto_test:
-].copy()
-
-y_test = y.iloc[
-    punto_test:
-].copy()
-
-fecha_test_inicio = df.iloc[
-    punto_test
-]["fecha"]
-
-fecha_test_fin = df.iloc[
-    -1
-]["fecha"]
-
-print(
-    "\nDESARROLLO:"
-)
-
-print(
-    f"Registros: {len(X_dev)}"
-)
-
-print(
-    f"Periodo: "
-    f"{df.iloc[0]['fecha'].date()} "
-    f"→ "
-    f"{df.iloc[punto_test - 1]['fecha'].date()}"
-)
-
-print(
-    "\nPRUEBA FINAL:"
-)
-
-print(
-    f"Registros: {len(X_test)}"
-)
-
-print(
-    f"Periodo: "
-    f"{fecha_test_inicio.date()} "
-    f"→ "
-    f"{fecha_test_fin.date()}"
-)
-
-
-# ============================================================
-# 14. DIVISIÓN ENTRENAMIENTO / VALIDACIÓN
-# ============================================================
-
-print(
-    "\n[5/8] Creando validación temporal..."
-)
-
-# Dentro del 80% de desarrollo:
-#
-# 80% entrenamiento
-# 20% validación
-
-punto_validacion = int(
-    len(X_dev) * 0.80
-)
-
-X_train = X_dev.iloc[
-    :punto_validacion
-].copy()
-
-y_train = y_dev.iloc[
-    :punto_validacion
-].copy()
-
-X_val = X_dev.iloc[
-    punto_validacion:
-].copy()
-
-y_val = y_dev.iloc[
-    punto_validacion:
-].copy()
-
-fecha_val_inicio = df.iloc[
-    punto_validacion
-]["fecha"]
-
-fecha_val_fin = df.iloc[
-    punto_test - 1
-]["fecha"]
-
-print(
-    "\nENTRENAMIENTO:"
-)
-
-print(
-    f"Registros: {len(X_train)}"
-)
-
-print(
-    f"Periodo: "
-    f"{df.iloc[0]['fecha'].date()} "
-    f"→ "
-    f"{df.iloc[punto_validacion - 1]['fecha'].date()}"
-)
-
-print(
-    "\nVALIDACIÓN:"
-)
-
-print(
-    f"Registros: {len(X_val)}"
-)
-
-print(
-    f"Periodo: "
-    f"{fecha_val_inicio.date()} "
-    f"→ "
-    f"{fecha_val_fin.date()}"
-)
-
-
-# ============================================================
-# 15. CALCULAR PESOS DE ENTRENAMIENTO
-# ============================================================
-
-print(
-    "\n[6/8] Calculando pesos continuos..."
-)
-
-pesos_train = crear_pesos_demanda(
-    y_train
-)
-
-print(
-    f"Alpha       : {PESO_ALPHA}"
-)
-
-print(
-    f"Umbral      : {PESO_UMBRAL}"
-)
-
-print(
-    f"Peso máximo : {PESO_MAXIMO}"
-)
-
-print(
-    f"Peso mínimo : {pesos_train.min():.2f}"
-)
-
-print(
-    f"Peso máximo : {pesos_train.max():.2f}"
-)
-
-print(
-    f"Peso promedio: {pesos_train.mean():.4f}"
-)
-
-
-# ============================================================
-# 16. ENTRENAMIENTO DE VALIDACIÓN
-# ============================================================
-
-print(
-    "\nEntrenando modelo sobre entrenamiento..."
-)
-
-modelo_validacion = crear_modelo()
-
-modelo_validacion.fit(
-    X_train,
-    y_train,
-    sample_weight=pesos_train,
-)
-
-
-# ============================================================
-# 17. EVALUAR VALIDACIÓN
-# ============================================================
-
-pred_val = modelo_validacion.predict(
-    X_val
-)
-
-pred_val = np.maximum(
-    pred_val,
-    0
-)
-
-mae_val = mean_absolute_error(
-    y_val,
-    pred_val
-)
-
-rmse_val = np.sqrt(
-    mean_squared_error(
-        y_val,
-        pred_val
-    )
-)
-
-r2_val = r2_score(
-    y_val,
-    pred_val
-)
-
-print(
-    "\n" + "=" * 70
-)
-
-print(
-    " RESULTADO VALIDACIÓN"
-)
-
-print(
-    "=" * 70
-)
-
-print(
-    f"MAE  : {mae_val:.4f}"
-)
-
-print(
-    f"RMSE : {rmse_val:.4f}"
-)
-
-print(
-    f"R²   : {r2_val:.4f}"
-)
-
-
-# ============================================================
-# 18. EVALUAR PICOS EN VALIDACIÓN
-# ============================================================
-
-y_val_array = y_val.to_numpy()
-
-mascara_picos_val = (
-    y_val_array >= 20
-)
-
-if mascara_picos_val.sum() > 0:
-
-    mae_picos_val = mean_absolute_error(
-        y_val_array[
-            mascara_picos_val
-        ],
-        pred_val[
-            mascara_picos_val
+    # ========================================================
+    # EJEMPLOS DE PREDICCIÓN
+    # ========================================================
+
+    print("\n" + "-" * 70)
+    print(" EJEMPLOS DE PREDICCIÓN")
+    print("-" * 70)
+
+    ejemplos = test[
+        [
+            "fecha",
+            "producto_id",
+            "producto",
+            "demanda",
         ]
+    ].copy()
+
+    ejemplos["predicho"] = pred_test
+
+    ejemplos["error"] = (
+        ejemplos["demanda"]
+        - ejemplos["predicho"]
     )
 
-    rmse_picos_val = np.sqrt(
-        mean_squared_error(
-            y_val_array[
-                mascara_picos_val
-            ],
-            pred_val[
-                mascara_picos_val
-            ]
-        )
+    ejemplos["error_abs"] = (
+        np.abs(ejemplos["error"])
     )
-
-else:
-
-    mae_picos_val = np.nan
-    rmse_picos_val = np.nan
-
-print(
-    f"MAE picos >=20 : "
-    f"{mae_picos_val:.4f}"
-)
-
-print(
-    f"RMSE picos >=20: "
-    f"{rmse_picos_val:.4f}"
-)
-
-
-# ============================================================
-# 19. ENTRENAMIENTO FINAL
-# ============================================================
-
-print(
-    "\n[7/8] Entrenando modelo final..."
-)
-
-# El modelo final utiliza todo el 80% de desarrollo.
-
-pesos_desarrollo = crear_pesos_demanda(
-    y_dev
-)
-
-modelo_final = crear_modelo()
-
-modelo_final.fit(
-    X_dev,
-    y_dev,
-    sample_weight=pesos_desarrollo,
-)
-
-print(
-    "Modelo final entrenado correctamente."
-)
-
-
-# ============================================================
-# 20. EVALUACIÓN FINAL
-# ============================================================
-
-print(
-    "\n[8/8] Evaluando con datos de prueba..."
-)
-
-predicciones = modelo_final.predict(
-    X_test
-)
-
-predicciones = np.maximum(
-    predicciones,
-    0
-)
-
-mae = mean_absolute_error(
-    y_test,
-    predicciones
-)
-
-rmse = np.sqrt(
-    mean_squared_error(
-        y_test,
-        predicciones
-    )
-)
-
-r2 = r2_score(
-    y_test,
-    predicciones
-)
-
-
-# ============================================================
-# 21. RESULTADOS FINALES
-# ============================================================
-
-print(
-    "\n" + "=" * 70
-)
-
-print(
-    " RESULTADOS FINALES DEL NUEVO MODELO"
-)
-
-print(
-    "=" * 70
-)
-
-print(
-    f"MAE  : {mae:.4f}"
-)
-
-print(
-    f"RMSE : {rmse:.4f}"
-)
-
-print(
-    f"R²   : {r2:.4f}"
-)
-
-
-# ============================================================
-# 22. ANÁLISIS DE PICOS
-# ============================================================
-
-y_test_array = y_test.to_numpy()
-
-mascara_picos = (
-    y_test_array >= 20
-)
-
-cantidad_picos = int(
-    mascara_picos.sum()
-)
-
-if cantidad_picos > 0:
-
-    mae_picos = mean_absolute_error(
-        y_test_array[
-            mascara_picos
-        ],
-        predicciones[
-            mascara_picos
-        ]
-    )
-
-    rmse_picos = np.sqrt(
-        mean_squared_error(
-            y_test_array[
-                mascara_picos
-            ],
-            predicciones[
-                mascara_picos
-            ]
-        )
-    )
-
-else:
-
-    mae_picos = np.nan
-    rmse_picos = np.nan
-
-print(
-    "\n" + "-" * 70
-)
-
-print(
-    " ANÁLISIS DE DEMANDA ALTA"
-)
-
-print(
-    "-" * 70
-)
-
-print(
-    f"Registros con demanda >=20: "
-    f"{cantidad_picos}"
-)
-
-print(
-    f"MAE picos : "
-    f"{mae_picos:.4f}"
-)
-
-print(
-    f"RMSE picos: "
-    f"{rmse_picos:.4f}"
-)
-
-
-# ============================================================
-# 23. IMPORTANCIA DE VARIABLES
-# ============================================================
-
-print(
-    "\n" + "-" * 70
-)
-
-print(
-    " IMPORTANCIA DE VARIABLES"
-)
-
-print(
-    "-" * 70
-)
-
-importancias = pd.DataFrame({
-    "variable": FEATURES,
-    "importancia": modelo_final.feature_importances_,
-})
-
-importancias = importancias.sort_values(
-    "importancia",
-    ascending=False
-)
-
-for _, fila in importancias.iterrows():
 
     print(
-        f"{fila['variable']:25} "
-        f"{fila['importancia']:.4f}"
+        ejemplos[
+            [
+                "fecha",
+                "producto_id",
+                "demanda",
+                "predicho",
+                "error_abs",
+            ]
+        ]
+        .head(10)
+        .to_string(index=False)
     )
 
 
-# ============================================================
-# 24. EJEMPLOS DE PREDICCIÓN
-# ============================================================
+    # ========================================================
+    # COMPARACIÓN CONTRA V4
+    # ========================================================
 
-print(
-    "\n" + "-" * 70
-)
+    V4_MAE = 1.0969
+    V4_RMSE = 1.5715
+    V4_R2 = 0.8592
+    V4_MAE_PICOS = 3.7205
 
-print(
-    " EJEMPLOS DE PREDICCIÓN"
-)
+    mejora_mae = (
+        (V4_MAE - metricas_test["mae"])
+        / V4_MAE
+    ) * 100
 
-print(
-    "-" * 70
-)
+    mejora_rmse = (
+        (V4_RMSE - metricas_test["rmse"])
+        / V4_RMSE
+    ) * 100
 
-ejemplos = pd.DataFrame({
-    "fecha": df.iloc[
-        punto_test:
-    ]["fecha"].dt.strftime(
-        "%Y-%m-%d"
-    ).values,
-
-    "producto_id": df.iloc[
-        punto_test:
-    ]["producto_id"].values,
-
-    "real": y_test.values,
-
-    "predicho": predicciones,
-})
-
-ejemplos["error"] = (
-    ejemplos["real"]
-    - ejemplos["predicho"]
-).abs()
-
-print(
-    ejemplos.head(10).to_string(
-        index=False
+    cambio_r2 = (
+        metricas_test["r2"]
+        - V4_R2
     )
-)
-
-
-# ============================================================
-# 25. COMPARAR CONTRA MODELO ACTUAL
-# ============================================================
-
-MAE_MODELO_ACTUAL = 4.252990156763385
-RMSE_MODELO_ACTUAL = 5.822283612757488
-R2_MODELO_ACTUAL = 0.24703916152859473
-
-mejora_mae = (
-    (
-        MAE_MODELO_ACTUAL
-        - mae
-    )
-    / MAE_MODELO_ACTUAL
-) * 100
-
-mejora_rmse = (
-    (
-        RMSE_MODELO_ACTUAL
-        - rmse
-    )
-    / RMSE_MODELO_ACTUAL
-) * 100
-
-cambio_r2 = (
-    r2
-    - R2_MODELO_ACTUAL
-)
-
-mejora_picos = np.nan
-
-if cantidad_picos > 0:
-
-    MAE_PICOS_ACTUAL = 13.585647
 
     mejora_picos = (
-        (
-            MAE_PICOS_ACTUAL
-            - mae_picos
-        )
-        / MAE_PICOS_ACTUAL
+        (V4_MAE_PICOS - metricas_test["mae_picos"])
+        / V4_MAE_PICOS
     ) * 100
 
 
-print(
-    "\n" + "=" * 70
-)
-
-print(
-    " COMPARACIÓN CONTRA MODELO ACTUAL"
-)
-
-print(
-    "=" * 70
-)
-
-print(
-    f"MAE actual      : "
-    f"{MAE_MODELO_ACTUAL:.4f}"
-)
-
-print(
-    f"MAE nuevo       : "
-    f"{mae:.4f}"
-)
-
-print(
-    f"Mejora MAE      : "
-    f"{mejora_mae:+.2f}%"
-)
-
-print()
-
-print(
-    f"RMSE actual     : "
-    f"{RMSE_MODELO_ACTUAL:.4f}"
-)
-
-print(
-    f"RMSE nuevo      : "
-    f"{rmse:.4f}"
-)
-
-print(
-    f"Mejora RMSE     : "
-    f"{mejora_rmse:+.2f}%"
-)
-
-print()
-
-print(
-    f"R² actual       : "
-    f"{R2_MODELO_ACTUAL:.4f}"
-)
-
-print(
-    f"R² nuevo        : "
-    f"{r2:.4f}"
-)
-
-print(
-    f"Cambio R²       : "
-    f"{cambio_r2:+.4f}"
-)
-
-print()
-
-if not np.isnan(
-    mejora_picos
-):
+    print("\n" + "=" * 70)
+    print(" COMPARACIÓN V5 VS V4")
+    print("=" * 70)
 
     print(
-        f"Mejora MAE picos: "
-        f"{mejora_picos:+.2f}%"
+        f"MAE V4       : {V4_MAE:.4f}"
+    )
+
+    print(
+        f"MAE V5       : {metricas_test['mae']:.4f}"
+    )
+
+    print(
+        f"Mejora MAE   : {mejora_mae:+.2f}%"
+    )
+
+    print()
+
+    print(
+        f"RMSE V4      : {V4_RMSE:.4f}"
+    )
+
+    print(
+        f"RMSE V5      : {metricas_test['rmse']:.4f}"
+    )
+
+    print(
+        f"Mejora RMSE  : {mejora_rmse:+.2f}%"
+    )
+
+    print()
+
+    print(
+        f"R² V4        : {V4_R2:.4f}"
+    )
+
+    print(
+        f"R² V5        : {metricas_test['r2']:.4f}"
+    )
+
+    print(
+        f"Cambio R²    : {cambio_r2:+.4f}"
+    )
+
+    print()
+
+    print(
+        f"MAE picos V4 : {V4_MAE_PICOS:.4f}"
+    )
+
+    print(
+        f"MAE picos V5 : {metricas_test['mae_picos']:.4f}"
+    )
+
+    print(
+        f"Mejora picos : {mejora_picos:+.2f}%"
     )
 
 
-# ============================================================
-# 26. GUARDAR MODELO
-# ============================================================
+    # ========================================================
+    # PAQUETE DEL MODELO
+    # ========================================================
 
-print(
-    "\nGuardando modelo..."
-)
+    print("\nGuardando modelo...")
 
-os.makedirs(
-    MODEL_DIR,
-    exist_ok=True
-)
+    paquete_modelo = {
 
-paquete_modelo = {
-    "modelo": modelo_final,
+        "modelo": modelo_final,
 
-    "features": FEATURES,
+        "features": FEATURES,
 
-    "mae": float(mae),
+        "mae": float(
+            metricas_test["mae"]
+        ),
 
-    "rmse": float(rmse),
+        "rmse": float(
+            metricas_test["rmse"]
+        ),
 
-    "r2": float(r2),
+        "r2": float(
+            metricas_test["r2"]
+        ),
 
-    "fecha_test_inicio": str(
-        fecha_test_inicio.date()
-    ),
+        "mae_picos_test": float(
+            metricas_test["mae_picos"]
+        ),
 
-    "fecha_dataset_inicio": str(
-        fecha_inicio_dataset.date()
-    ),
+        "rmse_picos_test": float(
+            metricas_test["rmse_picos"]
+        ),
 
-    "fecha_dataset_fin": str(
-        fecha_fin_dataset.date()
-    ),
+        "cantidad_picos_test": int(
+            metricas_test["cantidad_picos"]
+        ),
 
-    "registros_entrenamiento": int(
-        len(X_dev)
-    ),
+        "mae_validacion": float(
+            metricas_validacion["mae"]
+        ),
 
-    "registros_prueba": int(
-        len(X_test)
-    ),
+        "rmse_validacion": float(
+            metricas_validacion["rmse"]
+        ),
 
-    "mejores_parametros": {
-        "n_estimators": MODELO_PARAMETROS[
-            "n_estimators"
-        ],
+        "r2_validacion": float(
+            metricas_validacion["r2"]
+        ),
 
-        "max_depth": MODELO_PARAMETROS[
-            "max_depth"
-        ],
+        "fecha_test_inicio": str(
+            test["fecha"].min().date()
+        ),
 
-        "min_samples_leaf": MODELO_PARAMETROS[
-            "min_samples_leaf"
-        ],
+        "fecha_test_fin": str(
+            test["fecha"].max().date()
+        ),
 
-        "max_features": MODELO_PARAMETROS[
-            "max_features"
-        ],
+        "fecha_dataset_inicio": str(
+            df["fecha"].min().date()
+        ),
 
-        "random_state": MODELO_PARAMETROS[
-            "random_state"
-        ],
-    },
+        "fecha_dataset_fin": str(
+            df["fecha"].max().date()
+        ),
 
-    "metodo_entrenamiento":
-        "RandomForest con pesos continuos",
+        "registros_entrenamiento": int(
+            len(desarrollo)
+        ),
 
-    "peso_alpha":
-        float(PESO_ALPHA),
+        "registros_prueba": int(
+            len(test)
+        ),
 
-    "peso_umbral":
-        float(PESO_UMBRAL),
+        "mejores_parametros": RF_PARAMS,
 
-    "peso_maximo":
-        float(PESO_MAXIMO),
+        "metodo_entrenamiento":
+            "Random Forest con pesos continuos",
 
-    "mae_validacion":
-        float(mae_val),
+        "peso_alpha":
+            PESO_ALPHA,
 
-    "rmse_validacion":
-        float(rmse_val),
+        "peso_umbral":
+            PESO_UMBRAL,
 
-    "r2_validacion":
-        float(r2_val),
+        "peso_maximo":
+            PESO_MAXIMO,
 
-    "mae_picos_test":
-        float(mae_picos)
-        if not np.isnan(mae_picos)
-        else None,
+        "version_modelo":
+            "V5-pesos-continuos",
 
-    "rmse_picos_test":
-        float(rmse_picos)
-        if not np.isnan(rmse_picos)
-        else None,
+        "dataset_version":
+            "simulacion_demanda_v2",
 
-    "version_modelo":
-        "V3-pesos-continuos",
-}
+        "fecha_entrenamiento":
+            pd.Timestamp.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
+    }
 
 
-joblib.dump(
-    paquete_modelo,
-    MODEL_PATH
-)
+    joblib.dump(
+        paquete_modelo,
+        MODEL_PATH
+    )
 
 
-print(
-    "\nModelo guardado correctamente en:"
-)
+    print(
+        "\nModelo guardado correctamente en:"
+    )
 
-print(
-    MODEL_PATH
-)
+    print(
+        MODEL_PATH
+    )
 
 
-# ============================================================
-# 27. RESUMEN FINAL
-# ============================================================
+    # ========================================================
+    # RESUMEN FINAL
+    # ========================================================
 
-print(
-    "\n" + "=" * 70
-)
+    print("\n" + "=" * 70)
+    print(" ENTRENAMIENTO V5 FINALIZADO")
+    print("=" * 70)
 
-print(
-    " ENTRENAMIENTO FINALIZADO"
-)
+    print(
+        f"Dataset               : "
+        f"{len(df)} registros"
+    )
 
-print(
-    "=" * 70
-)
+    print(
+        f"Entrenamiento         : "
+        f"{len(desarrollo)} registros"
+    )
 
-print(
-    f"Dataset               : "
-    f"{len(df)} registros"
-)
+    print(
+        f"Prueba                : "
+        f"{len(test)} registros"
+    )
 
-print(
-    f"Entrenamiento         : "
-    f"{len(X_dev)} registros"
-)
+    print(
+        f"MAE final             : "
+        f"{metricas_test['mae']:.4f}"
+    )
 
-print(
-    f"Prueba                : "
-    f"{len(X_test)} registros"
-)
+    print(
+        f"RMSE final            : "
+        f"{metricas_test['rmse']:.4f}"
+    )
 
-print(
-    f"MAE final             : "
-    f"{mae:.4f}"
-)
+    print(
+        f"R² final              : "
+        f"{metricas_test['r2']:.4f}"
+    )
 
-print(
-    f"RMSE final            : "
-    f"{rmse:.4f}"
-)
+    print(
+        f"MAE validación        : "
+        f"{metricas_validacion['mae']:.4f}"
+    )
 
-print(
-    f"R² final              : "
-    f"{r2:.4f}"
-)
+    print(
+        f"MAE picos >=20        : "
+        f"{metricas_test['mae_picos']:.4f}"
+    )
 
-print(
-    f"MAE validación        : "
-    f"{mae_val:.4f}"
-)
+    print(
+        "Pesos continuos       : "
+        f"alpha={PESO_ALPHA}, "
+        f"máximo={PESO_MAXIMO}"
+    )
 
-print(
-    f"MAE picos >=20        : "
-    f"{mae_picos:.4f}"
-)
+    print(
+        "Modelo                : "
+        "Random Forest 400/20/2/sqrt"
+    )
 
-print(
-    f"Pesos continuos       : "
-    f"alpha={PESO_ALPHA}, "
-    f"máximo={PESO_MAXIMO}"
-)
+    print(
+        "Versión               : V5-pesos-continuos"
+    )
 
-print(
-    f"Modelo                : "
-    f"Random Forest 400/20/2/sqrt"
-)
+    print(
+        f"Archivo               : "
+        f"{MODEL_PATH}"
+    )
 
-print(
-    f"Archivo               : "
-    f"{MODEL_PATH}"
-)
+    print("=" * 70)
 
-print(
-    "=" * 70
-)
+
+if __name__ == "__main__":
+    main()

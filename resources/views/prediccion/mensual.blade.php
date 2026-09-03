@@ -1,9 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Demanda mensual | PrediccionIA')
+@section('title', 'Predicción de demanda | PrediccionIA')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/prediccion.css') }}">
+    <link
+        rel="stylesheet"
+        href="{{ asset('css/prediccion.css') }}"
+    >
 @endpush
 
 @section('content')
@@ -16,42 +19,99 @@
     |--------------------------------------------------------------------------
     */
 
-    $predicciones = is_iterable($predicciones ?? null)
-        ? collect($predicciones)
-        : collect();
+    $predicciones =
+        is_iterable($predicciones ?? null)
+            ? collect($predicciones)
+            : collect();
+
+
+    $nombreMes =
+        $nombreMes ?? now()->translatedFormat('F');
+
+    $anio =
+        (int) ($anio ?? now()->year);
+
+    $mes =
+        (int) ($mes ?? now()->month);
 
 
     /*
     |--------------------------------------------------------------------------
-    | RESUMEN DEL MES
+    | INFORMACIÓN DEL PERÍODO
+    |--------------------------------------------------------------------------
+    */
+
+    $inicioMes =
+        \Carbon\Carbon::create(
+            $anio,
+            $mes,
+            1
+        );
+
+    $diasMes =
+        $inicioMes->daysInMonth;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESUMEN
     |--------------------------------------------------------------------------
     */
 
     $totalProductos =
         $predicciones->count();
 
+
     $demandaTotal =
         (int) $predicciones->sum(
             fn ($producto) =>
-                (int) ($producto['demanda_mensual'] ?? 0)
+                (int) (
+                    $producto['demanda_mensual'] ?? 0
+                )
         );
 
-    $productosConFaltante =
-        $predicciones->filter(
-            fn ($producto) =>
-                (int) ($producto['faltante_estimado'] ?? 0) > 0
-        )->count();
 
-    $faltanteTotal =
-        (int) $predicciones->sum(
-            fn ($producto) =>
-                (int) ($producto['faltante_estimado'] ?? 0)
+    $demandaPromedioDia =
+        $diasMes > 0
+            ? round(
+                $demandaTotal / $diasMes,
+                1
+            )
+            : 0;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PRODUCTO DE MAYOR DEMANDA
+    |--------------------------------------------------------------------------
+    */
+
+    $productoMayorDemanda =
+        $predicciones
+            ->sortByDesc(
+                fn ($producto) =>
+                    (int) (
+                        $producto['demanda_mensual'] ?? 0
+                    )
+            )
+            ->first();
+
+
+    $nombreMayorDemanda =
+        $productoMayorDemanda['producto']
+        ?? 'Sin datos';
+
+
+    $cantidadMayorDemanda =
+        (int) (
+            $productoMayorDemanda['demanda_mensual']
+            ?? 0
         );
 
 
     /*
     |--------------------------------------------------------------------------
-    | PRODUCTOS DE MAYOR DEMANDA
+    | TOP DE PRODUCTOS
     |--------------------------------------------------------------------------
     */
 
@@ -59,36 +119,70 @@
         $predicciones
             ->sortByDesc(
                 fn ($producto) =>
-                    (int) ($producto['demanda_mensual'] ?? 0)
+                    (int) (
+                        $producto['demanda_mensual'] ?? 0
+                    )
             )
-            ->take(5);
+            ->take(6)
+            ->values();
+
+
+    $maxDemanda =
+        max(
+            1,
+            (int) $productosMayorDemanda->max(
+                fn ($producto) =>
+                    (int) (
+                        $producto['demanda_mensual'] ?? 0
+                    )
+            )
+        );
 
 
     /*
     |--------------------------------------------------------------------------
-    | ESTADO GENERAL
+    | PARTICIPACIÓN DEL PRODUCTO MAYOR
     |--------------------------------------------------------------------------
     */
 
-    $porcentajeCubierto = 0;
+    $participacionMayor =
+        $demandaTotal > 0
+            ? round(
+                (
+                    $cantidadMayorDemanda /
+                    $demandaTotal
+                ) * 100
+            )
+            : 0;
 
-    $stockTotal =
-        (int) $predicciones->sum(
-            fn ($producto) =>
-                (int) ($producto['stock_actual'] ?? 0)
+
+    /*
+    |--------------------------------------------------------------------------
+    | PRIMER Y ÚLTIMO PRODUCTO
+    |--------------------------------------------------------------------------
+    */
+
+    $productoMenorDemanda =
+        $predicciones
+            ->sortBy(
+                fn ($producto) =>
+                    (int) (
+                        $producto['demanda_mensual'] ?? 0
+                    )
+            )
+            ->first();
+
+
+    $nombreMenorDemanda =
+        $productoMenorDemanda['producto']
+        ?? 'Sin datos';
+
+
+    $cantidadMenorDemanda =
+        (int) (
+            $productoMenorDemanda['demanda_mensual']
+            ?? 0
         );
-
-    if ($demandaTotal > 0) {
-
-        $porcentajeCubierto =
-            min(
-                100,
-                round(
-                    ($stockTotal / $demandaTotal) * 100
-                )
-            );
-
-    }
 
 @endphp
 
@@ -100,59 +194,76 @@
          ENCABEZADO
     ========================================================== --}}
 
-    <header class="prediction-hero">
+    <header class="prediction-header">
 
-        <div class="prediction-hero-content">
+        <div class="prediction-header-content">
 
-            <span class="prediction-eyebrow">
-                PLANIFICACIÓN DE DEMANDA
-            </span>
+            <div class="prediction-tag">
+                <span class="prediction-tag-dot"></span>
+
+                PREDICCIÓN DE DEMANDA
+            </div>
+
 
             <h1>
-                Demanda mensual
+                ¿Cuánto se espera vender?
             </h1>
 
+
             <p>
-                Consulta cuánto se espera vender durante el mes
-                y prepara tu inventario con anticipación.
+                Consulta la demanda estimada para el período
+                seleccionado y conoce qué productos tendrán
+                mayor movimiento.
             </p>
 
         </div>
 
 
-        <div class="prediction-period">
+        {{-- PERÍODO ACTUAL --}}
+
+        <div class="prediction-period-card">
 
             <span>
                 PERÍODO
             </span>
 
             <strong>
-                {{ ucfirst($nombreMes) }} {{ $anio }}
+                {{ ucfirst($nombreMes) }}
             </strong>
+
+            <small>
+                {{ $anio }}
+            </small>
 
         </div>
 
     </header>
 
 
-
     {{-- =========================================================
-         FILTROS
+         SELECTOR DEL PERÍODO
     ========================================================== --}}
 
-    <section class="prediction-filter-card">
+    <section class="prediction-period-selector">
 
-        <div class="filter-heading">
+        <div class="period-selector-heading">
+
+            <div class="period-selector-icon">
+
+                <i class="bi bi-calendar3"></i>
+
+            </div>
+
 
             <div>
 
-                <span class="prediction-section-label">
+                <span>
                     CONSULTAR PERÍODO
                 </span>
 
-                <h2>
-                    Selecciona el mes que quieres planificar
-                </h2>
+                <strong>
+                    Elige el mes que quieres consultar
+                </strong>
 
             </div>
 
@@ -162,10 +273,10 @@
         <form
             action="{{ route('prediccion.mensual') }}"
             method="GET"
-            class="prediction-filter-form"
+            class="prediction-period-form"
         >
 
-            <div class="prediction-filter-group">
+            <div class="prediction-select-group">
 
                 <label for="mes">
                     Mes
@@ -193,7 +304,10 @@
 
                         <option
                             value="{{ $numero }}"
-                            {{ (int) $mes === $numero ? 'selected' : '' }}
+                            {{ $mes === $numero
+                                ? 'selected'
+                                : ''
+                            }}
                         >
                             {{ $nombre }}
                         </option>
@@ -205,7 +319,7 @@
             </div>
 
 
-            <div class="prediction-filter-group">
+            <div class="prediction-select-group">
 
                 <label for="anio">
                     Año
@@ -224,7 +338,10 @@
 
                         <option
                             value="{{ $year }}"
-                            {{ (int) $anio === $year ? 'selected' : '' }}
+                            {{ $anio === $year
+                                ? 'selected'
+                                : ''
+                            }}
                         >
                             {{ $year }}
                         </option>
@@ -238,12 +355,12 @@
 
             <button
                 type="submit"
-                class="prediction-consult-button"
+                class="prediction-update-button"
             >
 
-                <i class="bi bi-arrow-clockwise"></i>
+                <i class="bi bi-arrow-repeat"></i>
 
-                Actualizar
+                Consultar
 
             </button>
 
@@ -252,403 +369,462 @@
     </section>
 
 
+    @if($predicciones->count() > 0)
 
-    {{-- =========================================================
-         RESUMEN DEL MES
-    ========================================================== --}}
 
-    <section class="prediction-kpis">
+        {{-- =====================================================
+             RESUMEN
+        ====================================================== --}}
 
+        <section class="prediction-summary">
 
-        {{-- DEMANDA --}}
 
-        <article class="prediction-kpi prediction-kpi-main">
+            {{-- DEMANDA TOTAL --}}
 
-            <div class="prediction-kpi-icon">
-                <i class="bi bi-graph-up-arrow"></i>
-            </div>
+            <article class="prediction-summary-card primary">
 
-            <div>
+                <div class="summary-icon">
 
-                <span>
-                    Demanda esperada
-                </span>
-
-                <strong>
-                    {{ number_format($demandaTotal) }}
-                </strong>
-
-                <small>
-                    unidades para el mes
-                </small>
-
-            </div>
-
-        </article>
-
-
-        {{-- PRODUCTOS --}}
-
-        <article class="prediction-kpi">
-
-            <div class="prediction-kpi-icon neutral">
-                <i class="bi bi-box-seam"></i>
-            </div>
-
-            <div>
-
-                <span>
-                    Productos analizados
-                </span>
-
-                <strong>
-                    {{ $totalProductos }}
-                </strong>
-
-                <small>
-                    productos activos
-                </small>
-
-            </div>
-
-        </article>
-
-
-        {{-- FALTANTES --}}
-
-        <article class="prediction-kpi prediction-kpi-warning">
-
-            <div class="prediction-kpi-icon warning">
-                <i class="bi bi-exclamation-circle"></i>
-            </div>
-
-            <div>
-
-                <span>
-                    Productos por preparar
-                </span>
-
-                <strong>
-                    {{ $productosConFaltante }}
-                </strong>
-
-                <small>
-                    presentan faltante
-                </small>
-
-            </div>
-
-        </article>
-
-
-        {{-- UNIDADES --}}
-
-        <article class="prediction-kpi prediction-kpi-danger">
-
-            <div class="prediction-kpi-icon danger">
-                <i class="bi bi-box-arrow-in-down"></i>
-            </div>
-
-            <div>
-
-                <span>
-                    Unidades por cubrir
-                </span>
-
-                <strong>
-                    {{ number_format($faltanteTotal) }}
-                </strong>
-
-                <small>
-                    requieren reposición
-                </small>
-
-            </div>
-
-        </article>
-
-
-    </section>
-
-
-
-    {{-- =========================================================
-         RESUMEN VISUAL
-    ========================================================== --}}
-
-    <section class="prediction-overview">
-
-
-        <div>
-
-            <span class="prediction-section-label">
-                RESUMEN DEL PERÍODO
-            </span>
-
-            <h2>
-                ¿Cómo llego preparado a {{ ucfirst($nombreMes) }}?
-            </h2>
-
-            <p>
-                Compara el stock disponible con la cantidad
-                que se espera vender durante el mes.
-            </p>
-
-        </div>
-
-
-        <div class="coverage-box">
-
-            <div class="coverage-top">
-
-                <span>
-                    Cobertura estimada
-                </span>
-
-                <strong>
-                    {{ $porcentajeCubierto }}%
-                </strong>
-
-            </div>
-
-
-            <div class="coverage-track">
-
-                <span
-                    style="width: {{ $porcentajeCubierto }}%"
-                ></span>
-
-            </div>
-
-
-            <div class="coverage-bottom">
-
-                <span>
-                    {{ number_format($stockTotal) }}
-                    unidades disponibles
-                </span>
-
-                <span>
-                    {{ number_format($demandaTotal) }}
-                    esperadas
-                </span>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-
-    {{-- =========================================================
-         MAYOR DEMANDA
-    ========================================================== --}}
-
-    <section class="prediction-panel">
-
-        <header class="prediction-panel-header">
-
-            <div>
-
-                <span class="prediction-section-label">
-                    PRIORIDADES DEL MES
-                </span>
-
-                <h2>
-                    Productos con mayor demanda esperada
-                </h2>
-
-                <p>
-                    Te ayuda a identificar dónde tendrás mayor movimiento.
-                </p>
-
-            </div>
-
-        </header>
-
-
-        @if($productosMayorDemanda->count() > 0)
-
-
-            @php
-
-                $maxDemanda =
-                    max(
-                        1,
-                        (int) $productosMayorDemanda->max(
-                            fn ($producto) =>
-                                (int) ($producto['demanda_mensual'] ?? 0)
-                        )
-                    );
-
-            @endphp
-
-
-            <div class="monthly-demand-list">
-
-                @foreach($productosMayorDemanda as $indice => $producto)
-
-                    @php
-
-                        $demanda =
-                            (int) ($producto['demanda_mensual'] ?? 0);
-
-                        $stock =
-                            (int) ($producto['stock_actual'] ?? 0);
-
-                        $faltante =
-                            (int) ($producto['faltante_estimado'] ?? 0);
-
-                        $porcentaje =
-                            min(
-                                100,
-                                round(
-                                    ($demanda / $maxDemanda) * 100
-                                )
-                            );
-
-                    @endphp
-
-
-                    <div class="monthly-demand-row">
-
-
-                        <div class="monthly-demand-rank">
-
-                            {{ str_pad(
-                                $indice + 1,
-                                2,
-                                '0',
-                                STR_PAD_LEFT
-                            ) }}
-
-                        </div>
-
-
-                        <div class="monthly-demand-info">
-
-                            <div class="monthly-demand-top">
-
-                                <strong>
-                                    {{ $producto['producto'] ?? 'Producto' }}
-                                </strong>
-
-                                <span>
-                                    {{ $demanda }}
-                                    {{ $demanda === 1
-                                        ? 'unidad'
-                                        : 'unidades'
-                                    }}
-                                </span>
-
-                            </div>
-
-
-                            <div class="monthly-demand-track">
-
-                                <span
-                                    style="width: {{ $porcentaje }}%"
-                                ></span>
-
-                            </div>
-
-
-                            <div class="monthly-demand-meta">
-
-                                <span>
-                                    Stock actual:
-                                    <strong>{{ $stock }}</strong>
-                                </span>
-
-                                @if($faltante > 0)
-
-                                    <span class="monthly-faltante">
-
-                                        Faltan:
-                                        <strong>{{ $faltante }}</strong>
-
-                                    </span>
-
-                                @else
-
-                                    <span class="monthly-covered">
-
-                                        Stock cubierto
-
-                                    </span>
-
-                                @endif
-
-                            </div>
-
-                        </div>
-
-
-                    </div>
-
-                @endforeach
-
-            </div>
-
-
-        @else
-
-
-            <div class="prediction-empty">
-
-                <div class="prediction-empty-icon">
-
-                    <i class="bi bi-bar-chart"></i>
+                    <i class="bi bi-graph-up"></i>
 
                 </div>
 
-                <h3>
-                    No hay predicciones disponibles
-                </h3>
+                <div class="summary-content">
 
-                <p>
-                    No se encontraron datos para el período seleccionado.
+                    <span>
+                        Demanda estimada
+                    </span>
+
+                    <strong>
+                        {{ number_format($demandaTotal) }}
+                    </strong>
+
+                    <small>
+                        unidades en {{ ucfirst($nombreMes) }}
+                    </small>
+
+                </div>
+
+            </article>
+
+
+            {{-- PROMEDIO --}}
+
+            <article class="prediction-summary-card">
+
+                <div class="summary-icon blue">
+
+                    <i class="bi bi-bar-chart-line"></i>
+
+                </div>
+
+                <div class="summary-content">
+
+                    <span>
+                        Promedio diario
+                    </span>
+
+                    <strong>
+                        {{ number_format(
+                            $demandaPromedioDia,
+                            1
+                        ) }}
+                    </strong>
+
+                    <small>
+                        unidades por día
+                    </small>
+
+                </div>
+
+            </article>
+
+
+            {{-- MAYOR DEMANDA --}}
+
+            <article class="prediction-summary-card">
+
+                <div class="summary-icon cyan">
+
+                    <i class="bi bi-arrow-up-right"></i>
+
+                </div>
+
+                <div class="summary-content">
+
+                    <span>
+                        Mayor demanda
+                    </span>
+
+                    <strong class="summary-product">
+                        {{ $nombreMayorDemanda }}
+                    </strong>
+
+                    <small>
+                        {{ number_format(
+                            $cantidadMayorDemanda
+                        ) }}
+                        unidades estimadas
+                    </small>
+
+                </div>
+
+            </article>
+
+
+            {{-- PRODUCTOS --}}
+
+            <article class="prediction-summary-card">
+
+                <div class="summary-icon violet">
+
+                    <i class="bi bi-grid"></i>
+
+                </div>
+
+                <div class="summary-content">
+
+                    <span>
+                        Productos incluidos
+                    </span>
+
+                    <strong>
+                        {{ $totalProductos }}
+                    </strong>
+
+                    <small>
+                        productos en la previsión
+                    </small>
+
+                </div>
+
+            </article>
+
+        </section>
+
+
+        {{-- =====================================================
+             BLOQUE PRINCIPAL
+        ====================================================== --}}
+
+        <section class="prediction-content-grid">
+
+
+            {{-- =================================================
+                 MAYOR MOVIMIENTO
+            ================================================== --}}
+
+            <article class="prediction-card demand-ranking">
+
+                <header class="prediction-card-header">
+
+                    <div>
+
+                        <span>
+                            MAYOR MOVIMIENTO
+                        </span>
+
+                        <h2>
+                            Productos con mayor demanda
+                        </h2>
+
+                    </div>
+
+                    <div class="prediction-card-icon">
+
+                        <i class="bi bi-graph-up-arrow"></i>
+
+                    </div>
+
+                </header>
+
+
+                <p class="prediction-card-description">
+                    Estos productos concentran la mayor cantidad
+                    de unidades que se espera vender durante
+                    {{ strtolower($nombreMes) }}.
                 </p>
 
-            </div>
+
+                <div class="demand-ranking-list">
+
+                    @foreach(
+                        $productosMayorDemanda
+                        as $indice => $producto
+                    )
+
+                        @php
+
+                            $demandaProducto =
+                                (int) (
+                                    $producto['demanda_mensual']
+                                    ?? 0
+                                );
+
+                            $barra =
+                                min(
+                                    100,
+                                    round(
+                                        (
+                                            $demandaProducto /
+                                            $maxDemanda
+                                        ) * 100
+                                    )
+                                );
+
+                            $participacion =
+                                $demandaTotal > 0
+                                    ? round(
+                                        (
+                                            $demandaProducto /
+                                            $demandaTotal
+                                        ) * 100
+                                    )
+                                    : 0;
+
+                        @endphp
 
 
-        @endif
-
-    </section>
+                        <div class="demand-ranking-item">
 
 
+                            <div class="ranking-number">
 
-    {{-- =========================================================
-         DETALLE
-    ========================================================== --}}
+                                {{ str_pad(
+                                    $indice + 1,
+                                    2,
+                                    '0',
+                                    STR_PAD_LEFT
+                                ) }}
 
-    <section class="prediction-panel detail-panel">
-
-        <header class="prediction-panel-header">
-
-            <div>
-
-                <span class="prediction-section-label">
-                    DETALLE DE PLANIFICACIÓN
-                </span>
-
-                <h2>
-                    Demanda y stock por producto
-                </h2>
-
-                <p>
-                    Utiliza esta información para preparar las existencias
-                    del período seleccionado.
-                </p>
-
-            </div>
-
-        </header>
+                            </div>
 
 
-        @if($predicciones->count() > 0)
+                            <div class="ranking-body">
+
+                                <div class="ranking-top">
+
+                                    <div>
+
+                                        <strong>
+                                            {{ $producto['producto']
+                                                ?? 'Producto'
+                                            }}
+                                        </strong>
+
+                                        <span>
+                                            {{ $participacion }}%
+                                            de la demanda total
+                                        </span>
+
+                                    </div>
+
+
+                                    <strong class="ranking-value">
+
+                                        {{ number_format(
+                                            $demandaProducto
+                                        ) }}
+
+                                        <small>
+                                            unidades
+                                        </small>
+
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="ranking-track">
+
+                                    <span
+                                        style="
+                                            width: {{ $barra }}%;
+                                        "
+                                    ></span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    @endforeach
+
+                </div>
+
+            </article>
+
+
+            {{-- =================================================
+                 LECTURA RÁPIDA
+            ================================================== --}}
+
+            <article class="prediction-card forecast-insight">
+
+                <header class="prediction-card-header">
+
+                    <div>
+
+                        <span>
+                            LECTURA RÁPIDA
+                        </span>
+
+                        <h2>
+                            Lo más importante
+                        </h2>
+
+                    </div>
+
+                    <div class="prediction-card-icon soft">
+
+                        <i class="bi bi-lightning-charge"></i>
+
+                    </div>
+
+                </header>
+
+
+                <div class="insight-main">
+
+                    <div class="insight-badge">
+                        <i class="bi bi-arrow-up"></i>
+                        Mayor demanda
+                    </div>
+
+                    <strong>
+                        {{ $nombreMayorDemanda }}
+                    </strong>
+
+                    <p>
+                        Se esperan aproximadamente
+                        <strong>
+                            {{ number_format(
+                                $cantidadMayorDemanda
+                            ) }}
+                        </strong>
+                        unidades durante el mes.
+                    </p>
+
+                </div>
+
+
+                <div class="insight-divider"></div>
+
+
+                <div class="insight-stat">
+
+                    <div class="insight-stat-icon">
+
+                        <i class="bi bi-calendar2-week"></i>
+
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Promedio diario
+                        </span>
+
+                        <strong>
+                            {{ number_format(
+                                $demandaPromedioDia,
+                                1
+                            ) }}
+                            unidades
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="insight-stat">
+
+                    <div class="insight-stat-icon">
+
+                        <i class="bi bi-boxes"></i>
+
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Menor demanda
+                        </span>
+
+                        <strong>
+                            {{ $nombreMenorDemanda }}
+                        </strong>
+
+                        <small>
+                            {{ number_format(
+                                $cantidadMenorDemanda
+                            ) }}
+                            unidades
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <div class="insight-highlight">
+
+                    <i class="bi bi-info-circle"></i>
+
+                    <p>
+                        {{ $nombreMayorDemanda }}
+                        representa aproximadamente
+                        <strong>
+                            {{ $participacionMayor }}%
+                        </strong>
+                        de toda la demanda estimada del mes.
+                    </p>
+
+                </div>
+
+            </article>
+
+
+        </section>
+
+
+        {{-- =====================================================
+             DETALLE
+        ====================================================== --}}
+
+        <section class="prediction-card prediction-detail">
+
+            <header class="prediction-card-header detail-header">
+
+                <div>
+
+                    <span>
+                        DETALLE DE LA PREVISIÓN
+                    </span>
+
+                    <h2>
+                        Demanda esperada por producto
+                    </h2>
+
+                    <p>
+                        Consulta cuántas unidades se estima vender
+                        de cada producto durante el período.
+                    </p>
+
+                </div>
+
+
+                <div class="detail-period">
+
+                    <i class="bi bi-calendar3"></i>
+
+                    {{ ucfirst($nombreMes) }} {{ $anio }}
+
+                </div>
+
+            </header>
 
 
             <div class="prediction-table-wrapper">
@@ -664,19 +840,19 @@
                             </th>
 
                             <th>
-                                Se esperan vender
+                                Demanda estimada
                             </th>
 
                             <th>
-                                Tienes
+                                Promedio diario
                             </th>
 
                             <th>
-                                Te faltarían
+                                Participación
                             </th>
 
                             <th>
-                                Situación
+                                Nivel de demanda
                             </th>
 
                         </tr>
@@ -686,28 +862,64 @@
 
                     <tbody>
 
-
-                        @foreach($predicciones as $prediccion)
+                        @foreach(
+                            $predicciones
+                                ->sortByDesc(
+                                    fn ($producto) =>
+                                        (int) (
+                                            $producto['demanda_mensual']
+                                            ?? 0
+                                        )
+                                )
+                            as $producto
+                        )
 
                             @php
 
-                                $demanda =
+                                $demandaProducto =
                                     (int) (
-                                        $prediccion['demanda_mensual']
+                                        $producto['demanda_mensual']
                                         ?? 0
                                     );
 
-                                $stock =
-                                    (int) (
-                                        $prediccion['stock_actual']
-                                        ?? 0
-                                    );
+                                $promedioProducto =
+                                    $diasMes > 0
+                                        ? round(
+                                            $demandaProducto /
+                                            $diasMes,
+                                            1
+                                        )
+                                        : 0;
 
-                                $faltante =
-                                    (int) (
-                                        $prediccion['faltante_estimado']
-                                        ?? 0
-                                    );
+                                $participacionProducto =
+                                    $demandaTotal > 0
+                                        ? round(
+                                            (
+                                                $demandaProducto /
+                                                $demandaTotal
+                                            ) * 100
+                                        )
+                                        : 0;
+
+                                /*
+                                | Nivel simple y entendible.
+                                */
+
+                                $nivel =
+                                    $participacionProducto >= 10
+                                        ? 'Alta'
+                                        : (
+                                            $participacionProducto >= 7
+                                                ? 'Media'
+                                                : 'Baja'
+                                        );
+
+                                $nivelClase =
+                                    match ($nivel) {
+                                        'Alta' => 'high',
+                                        'Media' => 'medium',
+                                        default => 'low',
+                                    };
 
                             @endphp
 
@@ -723,19 +935,21 @@
 
                                         <div class="prediction-product-icon">
 
-                                            <i class="bi bi-box-seam"></i>
+                                            <i class="bi bi-cup-hot"></i>
 
                                         </div>
 
                                         <div>
 
                                             <strong>
-                                                {{ $prediccion['producto'] }}
+                                                {{ $producto['producto']
+                                                    ?? 'Producto'
+                                                }}
                                             </strong>
 
-                                            <small>
-                                                {{ $prediccion['mensaje'] ?? '' }}
-                                            </small>
+                                            <span>
+                                                Demanda estimada
+                                            </span>
 
                                         </div>
 
@@ -744,119 +958,96 @@
                                 </td>
 
 
-
                                 {{-- DEMANDA --}}
 
                                 <td>
 
-                                    <strong class="monthly-number">
+                                    <strong class="prediction-number">
 
-                                        {{ $demanda }}
+                                        {{ number_format(
+                                            $demandaProducto
+                                        ) }}
 
                                     </strong>
 
-                                    <span class="monthly-unit">
+                                    <span class="prediction-unit">
                                         unidades
                                     </span>
 
                                 </td>
 
 
-
-                                {{-- STOCK --}}
+                                {{-- PROMEDIO --}}
 
                                 <td>
 
-                                    <strong class="monthly-stock">
+                                    <strong class="prediction-average">
 
-                                        {{ $stock }}
+                                        {{ number_format(
+                                            $promedioProducto,
+                                            1
+                                        ) }}
 
                                     </strong>
 
-                                    <span class="monthly-unit">
-                                        disponibles
+                                    <span class="prediction-unit">
+                                        por día
                                     </span>
 
                                 </td>
 
 
-
-                                {{-- FALTANTE --}}
+                                {{-- PARTICIPACIÓN --}}
 
                                 <td>
 
-                                    @if($faltante > 0)
+                                    <div class="prediction-share">
 
-                                        <strong class="monthly-shortage">
-                                            {{ $faltante }}
+                                        <div class="share-track">
+
+                                            <span
+                                                style="
+                                                    width:
+                                                    {{ min(
+                                                        100,
+                                                        $participacionProducto
+                                                    ) }}%;
+                                                "
+                                            ></span>
+
+                                        </div>
+
+                                        <strong>
+                                            {{ $participacionProducto }}%
                                         </strong>
 
-                                        <span class="monthly-unit">
-                                            unidades
-                                        </span>
-
-                                    @else
-
-                                        <span class="monthly-no-shortage">
-
-                                            <i class="bi bi-check-circle"></i>
-
-                                            Cubierto
-
-                                        </span>
-
-                                    @endif
+                                    </div>
 
                                 </td>
 
 
-
-                                {{-- ESTADO --}}
+                                {{-- NIVEL --}}
 
                                 <td>
 
-                                    @if($faltante > 0)
+                                    <span
+                                        class="
+                                            demand-level
+                                            {{ $nivelClase }}
+                                        "
+                                    >
 
-                                        <span class="monthly-status danger">
+                                        <i></i>
 
-                                            <i></i>
+                                        {{ $nivel }}
 
-                                            Preparar reposición
-
-                                        </span>
-
-                                    @elseif($stock <=
-                                        (int) ($prediccion['stock_minimo'] ?? 0)
-                                    )
-
-                                        <span class="monthly-status warning">
-
-                                            <i></i>
-
-                                            Vigilar
-
-                                        </span>
-
-                                    @else
-
-                                        <span class="monthly-status success">
-
-                                            <i></i>
-
-                                            Cubierto
-
-                                        </span>
-
-                                    @endif
+                                    </span>
 
                                 </td>
-
 
                             </tr>
 
-
                         @endforeach
-
 
                     </tbody>
 
@@ -864,51 +1055,74 @@
 
             </div>
 
+        </section>
 
-        @else
 
+        {{-- =====================================================
+             NOTA
+        ====================================================== --}}
 
-            <div class="prediction-empty">
+        <div class="prediction-note">
 
-                <div class="prediction-empty-icon">
+            <div class="prediction-note-icon">
 
-                    <i class="bi bi-calendar-x"></i>
+                <i class="bi bi-info-lg"></i>
 
-                </div>
+            </div>
 
-                <h3>
-                    No hay productos para este período
-                </h3>
+            <div>
+
+                <strong>
+                    Ten en cuenta
+                </strong>
 
                 <p>
-                    Selecciona otro mes o año para consultar la demanda.
+                    Las cantidades mostradas son una estimación
+                    de la demanda futura. Sirven como apoyo para
+                    planificar, pero no representan una cantidad
+                    obligatoria de venta.
                 </p>
 
             </div>
 
-
-        @endif
-
-    </section>
+        </div>
 
 
+    @else
 
-    {{-- =========================================================
-         NOTA
-    ========================================================== --}}
 
-    <div class="prediction-note">
+        {{-- =====================================================
+             SIN DATOS
+        ====================================================== --}}
 
-        <i class="bi bi-info-circle"></i>
+        <section class="prediction-empty">
 
-        <p>
-            Las cantidades mostradas representan una
-            <strong>estimación de la demanda</strong>.
-            Úsalas como apoyo para planificar tus existencias
-            y no como una cantidad obligatoria de compra.
-        </p>
+            <div class="prediction-empty-icon">
 
-    </div>
+                <i class="bi bi-bar-chart"></i>
+
+            </div>
+
+            <h2>
+                No hay información para este período
+            </h2>
+
+            <p>
+                No encontramos productos con una previsión
+                disponible para {{ ucfirst($nombreMes) }}
+                {{ $anio }}.
+            </p>
+
+            <a
+                href="{{ route('prediccion.mensual') }}"
+            >
+                <i class="bi bi-arrow-left"></i>
+                Volver a consultar
+            </a>
+
+        </section>
+
+    @endif
 
 
 </main>
